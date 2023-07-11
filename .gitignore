@@ -4,6 +4,7 @@
 .Ruserdata
 survey_analysis_cache
 survey_analysis_files
+.git/Icon?
 .git/refs/Icon?
 .git/refs/heads/Icon?
 .git/refs/remotes/Icon?
