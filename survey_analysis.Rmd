@@ -58,8 +58,6 @@ library(rdss)
 library(DeclareDesign)
 library(tidyverse)
 
-#test
-
 options("yaml.eval.expr" = TRUE)
 
 theme_set(theme_classic(base_family = 'Palatino') + 
