@@ -28,7 +28,7 @@ geometry: margin=1in
 indent: yes
 link-citations: yes
 linkcolor: blue
-bibliography: "/Users/nathan/My Drive/Projects/2020 Same-Sex Immigrant Couples/ssimm/Same-Sex Immigration.bib"
+bibliography: "/Users/nathan/My Drive/Projects/2020 Same-Sex Immigrant Couples/Same-Sex Immigration.bib"
 #csl: chicago-author-date.csl
 
 title: "Sexuality, Cultural Similarity, and Immigrant Deservingness"
@@ -71,10 +71,10 @@ ggplot <- function(...) ggplot2::ggplot(...) + scale_color_brewer(palette="Dark2
 
 
 ```{r load}
-prolific <- read_csv(here('survey', 'prolific.csv')) %>%
+prolific <- read_csv(here('data', 'prolific.csv')) %>%
   filter(Status == 'APPROVED' | Status == 'AWAITING REVIEW')
-col_names <- names(read_csv(here('survey', 'survey.csv'), n_max = 0))
-survey_raw <- read_csv(here('survey', 'survey.csv'), col_names = col_names, skip = 3) %>%
+col_names <- names(read_csv(here('data', 'survey.csv'), n_max = 0))
+survey_raw <- read_csv(here('data', 'survey.csv'), col_names = col_names, skip = 3) %>%
   filter(PROLIFIC_PID %in% prolific$`Participant id`,
          PROLIFIC_PID != '644af405d31dd25adf037157', # failed attention check
          PROLIFIC_PID != '6048622d518a190008dfbe38', # extra person
@@ -383,3 +383,47 @@ survey <- survey %>%
 
 ```
 
+# Values
+```{r value-amces, fig.height = 3, fig.cap = 'Estimated  AMCEs for cultural similarity for all attributes. Standard errors are clustered within respondent.'}
+
+  plot(cj(survey, value_chosen ~  sexuality + gender + gdp + skill + lang + religion + reason, 
+        id = ~prolific_pid)) &
+  theme()
+
+```
+
+```{r value-interaction, fig.height = 3, fig.cap = 'Marginal means of the interaction between sexuality and cultural similarity'}
+survey <- survey %>%
+  mutate(value_chosen_factor = factor(value_chosen))
+
+int_cj <- cj(survey, chosen ~ sexuality, id = ~prolific_pid, estimate = 'mm', 
+             by = ~value_chosen_factor)
+int_cj_dif <- cj(survey, chosen ~ sexuality, id = ~prolific_pid, estimate = 'mm_diff', 
+                 by = ~value_chosen_factor)
+rbind(int_cj, int_cj_dif) %>%
+  mutate(BY = recode(BY, '1' = 'more culturally similar',
+                     '0' = 'less culturally similar',
+                     '1 - 0' = 'more - less')) %>%
+  plot() + 
+  ggplot2::facet_wrap(~BY, ncol = 3) +
+  # geom_vline(xintercept = 0.5, size = .2)
+  geom_vline(aes(xintercept = ifelse(statistic == 'mm', 0.5, 0)), size = .2)
+```
+
+```{r value-interaction-2, fig.height = 3, fig.cap = 'Marginal means of the interaction between sexuality and cultural similarity'}
+survey <- survey %>%
+  mutate(value_chosen_factor = factor(value_chosen))
+
+int_cj <- cj(survey, chosen ~ value_chosen_factor, id = ~prolific_pid, estimate = 'mm', 
+             by = ~sexuality)
+int_cj_dif <- cj(survey, chosen ~ value_chosen_factor, id = ~prolific_pid, estimate = 'mm_diff', 
+                 by = ~sexuality)
+rbind(int_cj, int_cj_dif) %>%
+  # mutate(BY = recode(BY, '1' = 'more culturally similar',
+  #                    '0' = 'less culturally similar',
+  #                    '1 - 0' = 'more - less')) %>%
+  plot() + 
+  ggplot2::facet_wrap(~BY, ncol = 3) +
+  # geom_vline(xintercept = 0.5, size = .2)
+  geom_vline(aes(xintercept = ifelse(statistic == 'mm', 0.5, 0)), size = .2)
+```

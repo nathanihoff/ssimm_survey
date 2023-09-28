@@ -66,10 +66,10 @@ ggplot <- function(...) ggplot2::ggplot(...) + scale_color_brewer(palette="Dark2
 ```
 
 ```{r load}
-prolific <- read_csv(here('survey', 'prolific.csv')) %>%
+prolific <- read_csv(here('data', 'prolific.csv')) %>%
   filter(Status == 'APPROVED' | Status == 'AWAITING REVIEW')
-col_names <- names(read_csv(here('survey', 'survey.csv'), n_max = 0))
-survey_raw <- read_csv(here('survey', 'survey.csv'), col_names = col_names, skip = 3) %>%
+col_names <- names(read_csv(here('data', 'survey.csv'), n_max = 0))
+survey_raw <- read_csv(here('data', 'survey.csv'), col_names = col_names, skip = 3) %>%
   filter(PROLIFIC_PID %in% prolific$`Participant id`,
          PROLIFIC_PID != '644af405d31dd25adf037157', # failed attention check
          PROLIFIC_PID != '6048622d518a190008dfbe38', # extra person
