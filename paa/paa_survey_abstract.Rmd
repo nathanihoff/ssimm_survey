@@ -12,6 +12,7 @@ header-includes:
   - \usepackage{bbm}
   - \usepackage{fancyhdr}
   - \pagestyle{fancy}
+  - \setlength{\headheight}{15pt}
   - \lhead{Hoffmann and Velasco}
   - \rhead{PAA 2024 Abstract}
 editor_options: 
@@ -27,10 +28,12 @@ link-citations: yes
 linkcolor: blue
 bibliography: "/Users/nathan/My Drive/Projects/2020 Same-Sex Immigrant Couples/Same-Sex Immigration.bib"
 # csl: chicago-author-date.csl
-# title: "How Sexuality Affects Evaluations of Immigrant Deservingness and Cultural Similarity: A Conjoint Survey Experiment"
+title: "How Sexuality Affects Evaluations of Immigrant Deservingness and Cultural Similarity: A Conjoint Survey Experiment"
 # subtitle: "PAA 2024 Submission"
 # date: "`r format(Sys.time(), '%B %e, %Y')`"
 # author:
+  
+# Abstract: "Do Americans view lesbian and gay (LG) migrants as more deserving to enter the country than their straight counterparts? Recent changes in federal policy have contributed to significant increases in LG migrants coming to the U.S., yet little is known about how Americans view them. While Americans are increasingly polarized on their views toward migration, support for gay and lesbian migrants may be cross-cutting. Using a conjoint survey experiment of 1,650 respondents, this project investigates how immigrants' sexual minority status affects Americans' perceptions of their deservingness for admission and how this may be related to evaluations of cultural similarity. Analyses consider interactions between reason for migration, skill, and sexuality as well as heterogeneous effects based on respondent profiles. Preliminary results show that Americans are more likely to choose LG migrants for admission than straight ones; LG immigrants fleeing persecution are seen as especially deserving of admission; and Republicans, Christians, and straight respondents see LG migrants as less deserving. This paper helps disentangle Americans' preferences for migrants' presumed cultural similarity from economic potential and humanitarian merit as well as elucidate public opinion of this under-studied group of sexual minority migrants."
 ---
 
 \newcommand{\tabitem}{~~\llap{\textbullet}~~}
@@ -217,9 +220,7 @@ survey <- survey_raw %>%
 
 ```
 
-<!-- # Abstract   -->
 
-<!-- Do Americans view lesbian and gay (LG) migrants as more deserving to enter the country than their straight counterparts? Recent changes in federal policy have contributed to significant increases in LG migrants coming to the U.S., yet little is known about how Americans view them. While Americans are increasingly polarized on their views toward migration, support for gay and lesbian migrants may be cross-cutting. Using a conjoint survey experiment, this project investigates how immigrants' sexual minority status affects Americans' perceptions of their deservingness for admission and how this may be related to evaluations of cultural similarity. Analyses consider interactions between reason for migration, skill, and sexuality as well as heterogeneous effects based on respondent profiles. Preliminary results show that Americans are more likely to choose LG migrants for admission than straight ones; LG immigrants fleeing persecution are seen as especially deserving of admission; and Republicans, Christians, and straight respondents see LG migrants as less deserving. This paper helps disentangle Americans' preferences for migrants' presumed cultural similarity from economic potential and humanitarian merit as well as elucidate public opinion of this under-studied group of sexual minority migrants. -->
 
 # Introduction
 
@@ -278,7 +279,7 @@ Preliminary results for H1 and H4 are shown in Figures \@ref(fig:all-amces) and 
 
 Figure \@ref(fig:mm) presents marginal means relevant for H4, yielding a number of significant results. Across education categories, respondents see straight immigrants as more deserving than LG ones. But, in line with H4a, respondents with at least a bachelor's degree see LG immigrants as more deserving than respondents with a high school or less education. However, respondents with some college see LG immigrants as the most deserving overall, complicating our theory. Democrats see LG immigrants as more deserving than straight ones, while republicans see LG ones as far less deserving. But among Democrats, LGs have a higher marginal mean, in line with H4b. Results for religion partially support H4c: Christians see LG immigrants as less deserving than atheists and the non-religious, but no less than other religious groups. If we consider sexuality, sexual minorities see LG immigrants as more deserving that straight ones, in line with H4d.  
 
-Preliminary analyses of the cultural similarity question show that profiles who are seen as more culturally similar are far more likely to be chosen. However LG profiles are seen as less culturally similar (Figure \@ref(fig:value-amces). For respondents who see LG profiles as more culturally similar than straight ones, they are more likely to choose the LG profiles, in line with H3.  
+Preliminary analyses of the cultural similarity question show that profiles who are seen as more culturally similar are far more likely to be chosen. However LG profiles are seen as less culturally similar (Figure \@ref(fig:value-amces)). For respondents who see LG profiles as more culturally similar than straight ones, they are more likely to choose the LG profiles, in line with H3.  
 
 # Next Steps
 
@@ -290,14 +291,6 @@ We will assess the results of H2, H4e, and H4f, and more fully assess H3. We wil
 ```{r all-amces, fig.cap = 'Estimated  AMCEs for admission for all attributes. Standard errors are clustered within respondent.'}
 
   plot(cj(survey, chosen ~  sexuality + gender + gdp + skill + lang + religion + reason, 
-        id = ~prolific_pid)) &
-  theme()
-
-```
-
-```{r value-amces, fig.cap = 'Estimated  AMCEs for cultural similarity for all attributes. Standard errors are clustered within respondent.'}
-
-  plot(cj(survey, value_chosen ~  sexuality + gender + gdp + skill + lang + religion + reason, 
         id = ~prolific_pid)) &
   theme()
 
@@ -335,6 +328,14 @@ survey <- survey %>%
         group = 'resp_sexuality') +
   geom_vline(xintercept = .5, size = .2) +
   theme(legend.position = 'right')) 
+```
+
+```{r value-amces, fig.cap = 'Estimated  AMCEs for cultural similarity for all attributes. Standard errors are clustered within respondent.'}
+
+  plot(cj(survey, value_chosen ~  sexuality + gender + gdp + skill + lang + religion + reason, 
+        id = ~prolific_pid)) &
+  theme()
+
 ```
 
 \newpage
