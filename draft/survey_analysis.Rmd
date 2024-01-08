@@ -380,6 +380,8 @@ survey <- survey %>%
   geom_vline(xintercept = .5, size = .2) +
    ggtitle('Republican')) + 
   theme(legend.position = 'bottom')
+table(survey$resp_knowlg)
+
 
 ```
 
