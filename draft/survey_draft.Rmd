@@ -53,6 +53,8 @@ library(patchwork)
 library(cregg)
 library(rdss)
 library(DeclareDesign)
+library(survey)
+library(srvyr)
 library(tidyverse)
 
 options("yaml.eval.expr" = TRUE)
@@ -226,12 +228,70 @@ survey <- survey_raw %>%
       resp_con_pop %in% c('Disagree', 'Somewhat disagree') ~ 'Disgree')),
     know_LG = factor(case_when(resp_knowlg %in% c('No, none', "I'm not sure") ~ 'No', 
                         T ~ 'Yes'))
-    )
+    ) %>%
+  left_join(mutate(prolific, resp_age = as.numeric(Age), 
+                   resp_ethnicity = `Ethnicity simplified`, 
+                   PROLIFIC_PID = `Participant id`) %>%
+              select(-Status),
+            by = 'PROLIFIC_PID') %>%
+  mutate(party = resp_politics,
+         age_cat = case_when(
+           resp_age <= 29 ~ '18-29',
+           resp_age %in% 30:49 ~ '30-49',
+           resp_age %in% 50:64 ~ '50-64',
+           resp_age >= 65 ~ '65+',
+           is.na(resp_age) ~ 'Refused'),
+         educ = case_when(
+           resp_education %in% c("Bachelor's degree", 
+                                 "Master's, doctorate, or other postgraduate degree") ~ "College graduate+",
+           resp_education %in% c('High school', 'Less than high school') ~ "H.S. graduate or less",
+           resp_education == 'Some college' ~ 'Some College'),
+         gender_pew = case_when(
+           resp_gender == 'Man' ~ 'A man',
+           resp_gender == 'Woman' ~ 'A woman',
+           resp_gender == 'Other' ~ 'In some other way')
+         )
 
 
 # survey <- survey %>% slice(rep(row_number(), each = 10)) %>%
 #   mutate(prolific_pid = 1:n())
 
+
+pew <- read_sav(here('data/W112_Jul22','ATP W112.sav')) %>%
+  mutate(weight = WEIGHT_W112,
+         party = as_factor(F_PARTY_FINAL),
+         age_cat = as_factor(F_AGECAT),
+         educ = as_factor(F_EDUCCAT),
+         gender_pew = as_factor(F_GENDER)) %>%
+  mutate(party = case_when(party %in% c('Independent', 'Something else') ~ 'other',
+                                   party == 'Refused' ~ NA,
+                                   T ~ party))
+
+pew_survey <- as_survey_design(pew, weights = weight)
+         
+props <- pew_survey %>%
+  group_by(party, age_cat, educ, gender_pew) %>%
+  summarize(prop_pew = survey_prop()) %>%
+  ungroup() %>%
+  complete(party, age_cat, educ, gender_pew) %>%
+  mutate(prop_pew = ifelse(is.na(prop_pew), 0, prop_pew)) %>%
+  select(-prop_pew_se)
+
+# party = as.character(as_factor(F_PARTY_FINAL)),
+#          age_cat = as.character(as_factor(F_AGECAT)),
+#          educ = as.character(as_factor(F_EDUCCAT)),
+#          gender = as.character(as_factor(F_GENDER))) %>%
+
+weights <- survey %>%
+  count(party, age_cat, educ, gender_pew) %>%
+  mutate(prop = n / nrow(survey)) %>%
+  left_join(props) %>%
+  mutate(weight = prop_pew / prop) %>%
+  select(-c(n, prop, prop_pew))
+
+survey <- survey %>%
+  left_join(weights) 
+  
 ```
 
 
@@ -246,7 +306,7 @@ Results demonstrate a positive, yet insignificant effect of sexual minority stat
 
 ## Research Questions
 
-1. How do U.S. citizens evaluate sexuality when making determinations of immigrant deservingness for admission? How does sexuality compare more well-studied topics like reason for migration and skill level of the immigrant? 
+1. How do U.S. citizens evaluate sexuality when making determinations of immigrant deservingness for admission? How does sexuality compare with more well-studied topics like reason for migration and skill level of the immigrant? 
 
 2. Are gay and lesbian immigrants perceived as more culturally similar to the U.S. compared to their heterosexual counterparts? And does this increase perceived deservingness? 
 
@@ -371,16 +431,14 @@ TBD based on whether population weights meaningfully change anything
 # Figures
 ```{r all-amces, fig.cap = 'Estimated  AMCEs for admission for all attributes. Standard errors are clustered within respondent.'}
 
-plot(all_amces) &
-  theme()
+plot(all_amces)
 
 ```
 
 ```{r value-amces, fig.cap = 'Estimated  AMCEs for cultural similarity for all attributes. Standard errors are clustered within respondent.'}
 
   plot(cj(survey, value_chosen ~  sexuality + gender + gdp + skill + lang + religion + reason, 
-        id = ~prolific_pid)) &
-  theme()
+        id = ~prolific_pid)) 
 
 ```
 
@@ -480,6 +538,206 @@ rbind(int_cj, int_cj_dif) %>%
 #   geom_vline(xintercept = .5, size = .2) +
 #   theme(legend.position = 'right')) 
 ```
+
+
+```{r, eval = F}
+# plot(cj(survey, chosen ~ sexuality, estimate = 'mm',
+#         id = ~prolific_pid, by = ~ resp_politics),
+#         group = 'resp_politics', size = 5, linewidth = 5) +
+#   geom_vline(xintercept = .5, size = .2) +
+#   cowplot::theme_cowplot() +
+#   theme(legend.position = 'right')
+
+cj(survey, chosen ~ sexuality, estimate = 'mm',
+        id = ~prolific_pid, by = ~ resp_politics) %>%
+  mutate(BY = factor(BY, levels = c('Democrat', 'Republican', 'other'))) %>%
+  rename(Politics = BY, Sexuality = level) %>%
+  ggplot(aes(x = Sexuality, y = estimate, color = Politics)) +
+  geom_pointrange(aes(ymin = lower, ymax = upper), position = position_dodge(.2), size = 1) +
+  coord_flip() +
+  labs(y = 'Marginal means', x = '', color = NULL) +
+  geom_hline(yintercept = .5, linetype = 2) +
+  cowplot::theme_cowplot() +
+  theme(legend.position = 'right') +
+  scale_color_manual(values=c("#2774AE", "darkred", "darkgrey"))
+```
+
+
+```{r poster-figs, eval = F}
+
+plot(all_amces, size = 5) +
+  ggtitle('Admission') +
+  cowplot::theme_cowplot(font_size = 20) +
+  theme(legend.position = 'none')
+
+ggsave(here('pres/all.png'), width = 8, height = 6)
+
+plot(cj(survey, value_chosen ~  sexuality + gender + gdp + skill + lang + religion + reason, 
+      id = ~prolific_pid), size = 5) +
+  ggtitle('Cultural Similarity') +
+  cowplot::theme_cowplot(font_size = 20) +
+  theme(legend.position = 'none')
+
+ggsave(here('pres/values.png'), width = 8, height = 6)
+
+(mutate(survey, resp_education = factor(ifelse(resp_education == "Master's, doctorate, or other postgraduate degree", 'Advanced degree', as.character(resp_education)), levels = c('Less than high school', 'High school', "Some college", "Bachelor's degree", "Advanced degree"))) %>%
+  cj(chosen ~ sexuality, estimate = 'mm',
+        id = ~prolific_pid, by = ~ resp_education) %>%
+  plot(group = 'resp_education', size = 5) +
+  geom_vline(xintercept = .5, size = .2) +
+  theme(legend.position = 'right')) /
+(plot(cj(survey, chosen ~ sexuality, estimate = 'mm',
+        id = ~prolific_pid, by = ~ resp_politics),
+        group = 'resp_politics', size = 5) +
+  geom_vline(xintercept = .5, size = .2) +
+  theme(legend.position = 'right')) /
+(plot(cj(survey, chosen ~ sexuality, estimate = 'mm',
+        id = ~prolific_pid, by = ~resp_religion),
+        group = 'resp_religion', size = 5) +
+  geom_vline(xintercept = .5, size = .2) +
+  theme(legend.position = 'right')) &
+  cowplot::theme_cowplot(font_size = 20) &
+  xlim(c(.3, .7)) &
+  labs(x = '')
+
+ggsave(here('pres/mm1.png'), width = 8, height = 8)
+
+(plot(cj(survey, chosen ~ sexuality, estimate = 'mm',
+        id = ~prolific_pid, by = ~ resp_sexuality),
+        group = 'resp_sexuality', size = 5) +
+  geom_vline(xintercept = .5, size = .2) +
+  theme(legend.position = 'right')) /
+(plot(cj(survey, chosen ~ sexuality, estimate = 'mm',
+        id = ~prolific_pid, by = ~ resp_overpop),
+        group = 'resp_overpop', size = 5) +
+  geom_vline(xintercept = .5, size = .2) +
+  theme(legend.position = 'right')) /
+(plot(cj(survey, chosen ~ sexuality, estimate = 'mm',
+        id = ~prolific_pid, by = ~know_LG),
+        group = 'know_LG', size = 5) +
+  geom_vline(xintercept = .5, size = .2) +
+  theme(legend.position = 'right')) &
+  cowplot::theme_cowplot(font_size = 20) &
+  xlim(c(.3, .7)) &
+  labs(x = '')
+
+ggsave(here('pres/mm2.png'), width = 8, height = 8)
+```
+
+
+\newpage
+
+# With weights
+```{r all-amces-weight, fig.cap = 'Weighted estimated  AMCEs for admission for all attributes. Standard errors are clustered within respondent.'}
+
+plot(cj(survey, chosen ~  sexuality + gender + gdp + skill + lang + religion + reason, 
+        weights = ~weight,
+        id = ~prolific_pid))
+
+```
+
+```{r value-amces-weight, fig.cap = 'Weighted estimated  AMCEs for cultural similarity for all attributes. Standard errors are clustered within respondent.'}
+
+  plot(cj(survey, value_chosen ~  sexuality + gender + gdp + skill + lang + religion + reason, 
+          weights = ~weight,
+        id = ~prolific_pid)) 
+
+```
+
+
+```{r mediation-weight, eval = T, fig.cap = 'Weighted AMCEs for admission for sexuality, stratified by whether the profile received a 6 or 7 out of 7 on cultural similarity ratings'}
+mediation_cj <- survey %>%
+  mutate(top_value = factor(case_when(value >= 6 ~ '6 or 7 on cultural similarity',
+                               T ~ '1 to 5 on cultural similarity'))) %>% 
+  cj(., chosen ~ sexuality, id = ~prolific_pid, estimate = 'amce', 
+     weights = ~weight,
+             by = ~top_value)
+
+mediation_cj %>%
+  plot() +
+  ggplot2::facet_wrap(~BY, nrow = 1) +
+  geom_vline(aes(xintercept = ifelse(statistic == 'mm', 0.5, 0)), size = .2)
+```
+
+
+```{r interaction-weight, fig.height = 3, fig.cap = 'Weighted marginal means of the interaction between sexuality and the reason for migration'}
+rbind(cj(survey, chosen ~ sexuality, id = ~prolific_pid, estimate = 'mm', 
+         weights = ~weight,
+             by = ~reason), 
+      cj(survey, chosen ~ sexuality, id = ~prolific_pid, estimate = 'mm_diff', 
+         weights = ~weight,
+                 by = ~reason)) %>%
+  mutate(BY = recode(BY, 'could not find work' = 'work',
+                     'feared government persecution' = 'persecution',
+                     'feared government persecution - could not find work' = 
+                       'persecution - work')) %>%
+  plot() + 
+  ggplot2::facet_wrap(~BY, ncol = 3) +
+  # geom_vline(xintercept = 0.5, size = .2)
+  geom_vline(aes(xintercept = ifelse(statistic == 'mm', 0.5, 0)), size = .2)
+```
+
+
+
+
+
+
+```{r mm-1-weight, fig.height = 7, fig.cap = 'Weighted marginal means. Standard errors are clustered within respondent.'}
+# (plot(cj(mutate(survey, resp_bachelor = as.factor(resp_education %in% 
+#                     c("Bachelor's degree", "Master's, doctorate, or other postgraduate degree"))), 
+#          chosen ~ sexuality, estimate = 'mm',
+#         weights = ~weight, id = ~prolific_pid, by = ~ resp_bachelor),
+#         group = 'resp_bachelor') +
+#   geom_vline(xintercept = .5, size = .2) +
+#   theme(legend.position = 'right'))
+
+
+(plot(cj(survey, chosen ~ sexuality, estimate = 'mm',
+        weights = ~weight, id = ~prolific_pid, by = ~ resp_education),
+        group = 'resp_education') +
+  geom_vline(xintercept = .5, size = .2) +
+  theme(legend.position = 'right')) /
+(plot(cj(survey, chosen ~ sexuality, estimate = 'mm',
+        weights = ~weight, id = ~prolific_pid, by = ~ resp_politics),
+        group = 'resp_politics') +
+  geom_vline(xintercept = .5, size = .2) +
+  theme(legend.position = 'right')) /
+(plot(cj(survey, chosen ~ sexuality, estimate = 'mm',
+        weights = ~weight, id = ~prolific_pid, by = ~resp_religion),
+        group = 'resp_religion') +
+  geom_vline(xintercept = .5, size = .2) +
+  theme(legend.position = 'right')) 
+```
+
+```{r mm-2-weight, fig.height = 7, fig.cap = 'Weighted marginal means. Standard errors are clustered within respondent.'}
+
+(plot(cj(survey, chosen ~ sexuality, estimate = 'mm',
+        weights = ~weight, id = ~prolific_pid, by = ~ resp_sexuality),
+        group = 'resp_sexuality') +
+  geom_vline(xintercept = .5, size = .2) +
+  theme(legend.position = 'right')) /
+(plot(cj(survey, chosen ~ sexuality, estimate = 'mm',
+        weights = ~weight, id = ~prolific_pid, by = ~ resp_overpop),
+        group = 'resp_overpop') +
+  geom_vline(xintercept = .5, size = .2) +
+  theme(legend.position = 'right')) /
+(plot(cj(survey, chosen ~ sexuality, estimate = 'mm',
+        weights = ~weight, id = ~prolific_pid, by = ~know_LG),
+        group = 'know_LG') +
+  geom_vline(xintercept = .5, size = .2) +
+  theme(legend.position = 'right')) 
+
+# (plot(cj(mutate(survey, resp_knowlg = factor(resp_knowlg, 
+#               levels = c("I'm not sure", "No, none", "One", "Two to five", "More than five"))), 
+#          value_chosen ~ sexuality, estimate = 'mm',
+#         weights = ~weight, id = ~prolific_pid, by = ~resp_knowlg),
+#         group = 'resp_knowlg') +
+#   geom_vline(xintercept = .5, size = .2) +
+#   theme(legend.position = 'right')) 
+```
+
+
+
 
 
 \newpage
