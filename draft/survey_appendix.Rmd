@@ -1,0 +1,411 @@
+---
+output:
+  bookdown::pdf_document2:
+  # bookdown::word_document2:
+  #   reference_docx: "word-template.docx"
+    toc: no
+    number_sections: no
+    pandoc_args: !expr rmdfiltr::add_wordcount_filter(rmdfiltr::add_citeproc_filter(args = NULL))
+    latex_engine: xelatex
+    keep_tex: no
+header-includes:
+  - \usepackage{bbm}
+  - \usepackage{fancyhdr}
+  - \pagestyle{fancy}
+  - \setlength{\headheight}{15pt}
+  - \lhead{Hoffmann and Velasco}
+  - \rhead{`r format(Sys.time(), '%B %e, %Y')`}
+editor_options: 
+  chunk_output_type: console
+  
+citeproc: no
+# fontfamily: mathpazo
+# mainfont: "Times New Roman"
+# fontsize: 12pt
+geometry: margin=1in
+indent: yes
+link-citations: yes
+linkcolor: blue
+bibliography: "/Users/nathan/My Drive/Projects/2020 Same-Sex Immigrant Couples/Same-Sex Immigration.bib"
+csl: chicago-author-date.csl
+title: "Appendix"
+subtitle: "How Sexuality Affects Evaluations of Immigrant Deservingness and Cultural Similarity: A Conjoint Survey Experiment"
+# subtitle: "PAA 2024 Submission"
+date: "`r format(Sys.time(), '%B %e, %Y')`"
+author:
+- Nathan I. Hoffmann, Department of Sociology, University of California, Los Angeles
+- Kristopher Velasco, Department of Sociology, Princeton University
+  
+
+---
+
+\newcommand{\tabitem}{~~\llap{\textbullet}~~}
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, warning = F, message = F, cache = T, 
+                      dpi = 300)
+
+library(here)
+library(huxtable)
+library(haven)
+library(patchwork)
+library(cregg)
+library(rdss)
+library(DeclareDesign)
+library(survey)
+library(srvyr)
+library(tidyverse)
+
+options("yaml.eval.expr" = TRUE)
+
+theme_set(theme_classic(base_family = 'Palatino') + 
+            theme(legend.title=element_blank(),
+                  panel.grid.major.y = element_line('grey80'),
+                  legend.background = element_rect(fill = "transparent")))
+ggplot <- function(...) ggplot2::ggplot(...) + scale_color_brewer(palette="Dark2") +
+  scale_fill_brewer(palette="Dark2")
+```
+
+```{r load}
+prolific <- read_csv(here('data', 'prolific.csv')) %>%
+  filter(Status == 'APPROVED' | Status == 'AWAITING REVIEW')
+col_names <- names(read_csv(here('data', 'survey.csv'), n_max = 0))
+survey_raw <- read_csv(here('data', 'survey.csv'), col_names = col_names, skip = 3) %>%
+  filter(PROLIFIC_PID %in% prolific$`Participant id`,
+         PROLIFIC_PID != '644af405d31dd25adf037157', # failed attention check
+         PROLIFIC_PID != '6048622d518a190008dfbe38', # extra person
+         Finished == T)
+# 
+# not_approved <- prolific %>%
+#   filter(Status != 'APPROVED') %>%
+#   pull(`Participant id`)
+# filter(survey_raw, PROLIFIC_PID %in% not_approved) %>%
+#   select(Finished, PROLIFIC_PID)
+# 
+# prolific %>%
+#   filter(!(`Participant id` %in% survey_raw$prolific_pid)) %>%
+#   arrange(`Participant id`) %>%
+#   select(`Participant id`, Status)
+# 
+# unfinished_maybe <- survey_raw %>%
+#   filter(Finished != T) %>%
+#   pull(PROLIFIC_PID)
+# finished_ids <- survey_raw %>%
+#   filter(Finished == T) %>%
+#   pull(PROLIFIC_PID)
+# unfinished <- unfinished_maybe[!(unfinished_maybe %in% finished_ids)]
+# 
+# survey_raw %>%
+#   filter(PROLIFIC_PID %in% unfinished) %>%
+#   View()
+# 
+# survey_raw %>%
+#   filter(Finished != T) %>%
+#   View()
+# 
+# survey_raw %>%
+#   filter(PROLIFIC_PID %in% unfinished)
+# 
+# survey_raw %>%
+#   filter(PROLIFIC_PID == '6111811553d54da81ce61f21') %>% View()
+# 
+# survey_raw %>%
+#   filter(PROLIFIC_PID %in% unfinished) %>%
+#   arrange(PROLIFIC_PID) %>%
+#   select(PROLIFIC_PID, Finished)
+#   group_by(PROLIFIC_PID) %>% count()
+#   select(PROLIFIC_PID, everything()) %>% View()
+# 
+# survey_raw %>%
+#   filter(!(PROLIFIC_PID %in% prolific$`Participant id`)) %>%
+#   select(PROLIFIC_PID)
+# 
+# survey_raw %>%
+#   arrange(PROLIFIC_PID) %>%
+#   group_by(PROLIFIC_PID) %>%
+#   filter(n()>1) %>% 
+#   select(PROLIFIC_PID, everything()) %>%
+#   View()
+# 
+# 
+# prolific %>%
+#   filter(!(`Participant id` %in% survey_raw$PROLIFIC_PID)) %>%
+#   select(`Participant id`)
+# 
+# survey_raw %>% filter(PROLIFIC_PID %in% 
+#                         c('5a91877e777df200015fa0f5',
+#                           '608a58c50e40c85b2f5f94ec',
+#                           '6111811553d54da81ce61f21',
+#                           '60fd957e79d70d6be755ad8c')) %>% View()
+
+
+# Attention check
+  # survey_raw %>%
+  #   filter(!str_detect(tolower(attention_color_5_TEXT), 'green') |
+  #            !(str_detect(as.character(attention_number_6_TEXT), '9') |
+  #               str_detect(tolower(as.character(attention_number_6_TEXT)), 'nine'))
+  #          ) %>%
+  #   mutate(minutes = `Duration (in seconds)`/60) %>%
+  #   select(prolific_pid, attention_color_5_TEXT, attention_number_6_TEXT, minutes)
+
+
+
+survey <- survey_raw %>%
+  #mutate(choice1 = Q3, choice2 = Q3, choice3 = Q13, choice4 = Q13) %>%
+  pivot_longer(c(gender1:reason4, rating1:value2, rating3:value4, 
+                 rating5:value6, rating7:value8), 
+               names_to = c('.value', 'number'), names_pattern = ('(.*)(\\d+)')) %>%
+  filter(!is.na(gender)) %>%
+  mutate(
+    chosen = case_when(
+      choice_a == 'Immigrant 1 should be admitted.' & number == 1 ~ 1,
+      choice_a == 'Immigrant 2 should be admitted.' & number == 2 ~ 1,
+      choice_b == 'Immigrant 3 should be admitted.' & number == 3 ~ 1,
+      choice_b == 'Immigrant 4 should be admitted.' & number == 4 ~ 1,
+      choice_c == 'Immigrant 5 should be admitted.' & number == 5 ~ 1,
+      choice_c == 'Immigrant 6 should be admitted.' & number == 6 ~ 1,
+      choice_d == 'Immigrant 7 should be admitted.' & number == 7 ~ 1,
+      choice_d == 'Immigrant 8 should be admitted.' & number == 8 ~ 1,
+      T ~ 0),
+    value_chosen = case_when(
+      value_a == 'Immigrant 1 has greater shared values with the U.S.' & number == 1 ~ 1,
+      value_a == 'Immigrant 2 has greater shared values with the U.S.' & number == 2 ~ 1,
+      value_b == 'Immigrant 3 has greater shared values with the U.S.' & number == 3 ~ 1,
+      value_b == 'Immigrant 4 has greater shared values with the U.S.' & number == 4 ~ 1,
+      value_c == 'Immigrant 5 has greater shared values with the U.S.' & number == 5 ~ 1,
+      value_c == 'Immigrant 6 has greater shared values with the U.S.' & number == 6 ~ 1,
+      value_d == 'Immigrant 7 has greater shared values with the U.S.' & number == 7 ~ 1,
+      value_d == 'Immigrant 8 has greater shared values with the U.S.' & number == 8 ~ 1,
+      T ~ 0),
+    sexuality = factor(ifelse(sexuality %in% c('lesbian', 'gay'), 'Lesbian or gay', 'Straight'), 
+                       levels = c('Straight', 'Lesbian or gay')),
+    across(c(gender, sexuality, gdp, skill, lang, religion, reason), function(x) factor(x)),
+    across(c(rating, value), function(x) as.numeric(substr(x, 1,1)))) %>%
+  mutate(skill = recode(skill, 
+                        'has a high school degree, and works as a restaurant manager' = 
+                          'high school',
+                        'has a primary school education, and works as a cleaner' = 
+                          'primary school',
+                        'has an MD, and works as a cardiologist' = 'MD'),
+         reason = recode(reason, 'could not find work due to high unemployment' = 
+                           'could not find work'),
+         resp_religion_full = resp_religion,
+         resp_religion = factor(case_when(
+           resp_religion %in% c('Other Christian', '
+                                Protestant (Baptist, Methodist, Non-denominational, Lutheran, Presbyterian, Pentecostal, Episcopalian, Reformed, Church of Christ, Jehovah’s Witness, etc.)',
+                                'Roman Catholic (Catholic)') ~ 'Christian',
+           resp_religion %in% c('Agnostic (not sure if there is a God)',
+                                'Atheist (do not believe in God)',
+                                'Nothing in particular') ~ 'Atheist/not religious',
+           T ~ 'Other')),
+         resp_politics = factor(ifelse(
+             resp_politics %in% c('Independent', 'None of these'), 'other',
+             resp_politics)),
+         resp_sexuality = factor(case_when(
+           resp_sexuality %in% c("I don't know the answer", 'Something else') ~ 'Other',
+           resp_sexuality %in% c('Bisexual', 'Lesbian or gay') ~ 'Lesbian/gay/bisexual',
+           resp_sexuality == 'Straight (that is, not gay or lesbian)' ~ 'Straight'
+         )),
+         resp_education = factor(resp_education),
+         resp_pro_econ = resp_imm_support_1,
+         resp_pro_job = resp_imm_support_2,
+         resp_pro_tax = resp_imm_support_3,
+         resp_pro_culture = resp_imm_support_4,
+         resp_pro_help = resp_imm_support_5,
+         resp_con_econ = resp_imm_support_6,
+         resp_con_job = resp_imm_support_7,
+         resp_con_welfare = resp_imm_support_8,
+         resp_con_crime = resp_imm_support_9,
+         resp_con_pop = resp_imm_support_10,
+         resp_con_culture = resp_imm_support_11
+  ) %>%
+  mutate(BA = factor(case_when(
+    resp_education %in% c("Bachelor's degree", "Master's, doctorate, or other postgraduate degree") ~ 'BA',
+    !is.na(resp_education) ~ 'no BA')),
+    resp_overpop = factor(case_when(
+      resp_con_pop %in% c('Agree', 'Somewhat agree') ~ 'Agree',
+      resp_con_pop %in% c('Disagree', 'Somewhat disagree') ~ 'Disgree')),
+    know_LG = factor(case_when(resp_knowlg %in% c('No, none', "I'm not sure") ~ 'No', 
+                        T ~ 'Yes'))
+    ) %>%
+  left_join(mutate(prolific, resp_age = as.numeric(Age), 
+                   resp_ethnicity = `Ethnicity simplified`, 
+                   PROLIFIC_PID = `Participant id`) %>%
+              select(-Status),
+            by = 'PROLIFIC_PID') %>%
+  mutate(party = resp_politics,
+         age_cat = case_when(
+           resp_age <= 29 ~ '18-29',
+           resp_age %in% 30:49 ~ '30-49',
+           resp_age %in% 50:64 ~ '50-64',
+           resp_age >= 65 ~ '65+',
+           is.na(resp_age) ~ 'Refused'),
+         educ = case_when(
+           resp_education %in% c("Bachelor's degree", 
+                                 "Master's, doctorate, or other postgraduate degree") ~ "College graduate+",
+           resp_education %in% c('High school', 'Less than high school') ~ "H.S. graduate or less",
+           resp_education == 'Some college' ~ 'Some College'),
+         gender_pew = case_when(
+           resp_gender == 'Man' ~ 'A man',
+           resp_gender == 'Woman' ~ 'A woman',
+           resp_gender == 'Other' ~ 'In some other way')
+         ) %>%
+  mutate(across(c(gdp, lang, reason, gender, skill, religion), ~as.factor(str_to_sentence(.x)))) %>%
+  mutate(skill = as.factor(ifelse(skill == 'Md', 'MD', skill))) %>%
+  mutate(Sexuality = sexuality, 
+         Gender = gender,
+         GDP = gdp,
+         Skill = skill,
+         Language = lang,
+         Religion = religion,
+         Reason = reason)
+
+
+# survey <- survey %>% slice(rep(row_number(), each = 10)) %>%
+#   mutate(prolific_pid = 1:n())
+
+
+pew <- read_sav(here('data/W112_Jul22','ATP W112.sav')) %>%
+  mutate(weight = WEIGHT_W112,
+         party = as_factor(F_PARTY_FINAL),
+         age_cat = as_factor(F_AGECAT),
+         educ = as_factor(F_EDUCCAT),
+         gender_pew = as_factor(F_GENDER)) %>%
+  mutate(party = case_when(party %in% c('Independent', 'Something else') ~ 'other',
+                                   party == 'Refused' ~ NA,
+                                   T ~ party))
+
+pew_survey <- as_survey_design(pew, weights = weight)
+         
+props <- pew_survey %>%
+  group_by(party, age_cat, educ, gender_pew) %>%
+  summarize(prop_pew = survey_prop()) %>%
+  ungroup() %>%
+  complete(party, age_cat, educ, gender_pew) %>%
+  mutate(prop_pew = ifelse(is.na(prop_pew), 0, prop_pew)) %>%
+  select(-prop_pew_se)
+
+# party = as.character(as_factor(F_PARTY_FINAL)),
+#          age_cat = as.character(as_factor(F_AGECAT)),
+#          educ = as.character(as_factor(F_EDUCCAT)),
+#          gender = as.character(as_factor(F_GENDER))) %>%
+
+weights <- survey %>%
+  count(party, age_cat, educ, gender_pew) %>%
+  mutate(prop = n / nrow(survey)) %>%
+  left_join(props) %>%
+  mutate(weight = prop_pew / prop) %>%
+  select(-c(n, prop, prop_pew))
+
+survey <- survey %>%
+  left_join(weights) 
+  
+```
+
+
+
+# Weighted Results
+
+To re-weight the Prolific survey sample to be closer to the U.S. population, we construct inverse probability weights using the July-August 2022 American Trends Panel (Wave 112, n = `r nrow(pew)`) [@pew_2022_american], based on four variables: political party, age (in four categories), education, and gender. 
+
+```{r all-amces, fig.cap = 'Weighted AMCEs for admission for all attributes. Standard errors are clustered within respondent.'}
+
+plot(cj(survey, chosen ~  Sexuality + Gender + GDP + Skill + Language + Religion + Reason, 
+        weights = ~weight, id = ~prolific_pid))
+
+```
+
+```{r value-amces, fig.cap = 'Weighted AMCEs for cultural similarity for all attributes. Standard errors are clustered within respondent.'}
+
+plot(cj(survey, value_chosen ~  Sexuality + Gender + GDP + Skill + Language + Religion + Reason, 
+        weights = ~weight, id = ~prolific_pid)) 
+
+```
+
+
+```{r mediation, eval = T, fig.cap = 'Weighted AMCEs for admission for sexuality, stratified by whether the profile received a 6 or 7 out of 7 on cultural similarity ratings'}
+mediation_cj <- survey %>%
+  mutate(top_value = factor(case_when(value >= 6 ~ '6 or 7 on cultural similarity',
+                               T ~ '1 to 5 on cultural similarity'))) %>% 
+  cj(., chosen ~ sexuality, weights = ~weight, id = ~prolific_pid, estimate = 'amce', 
+             by = ~top_value)
+
+mediation_cj %>%
+  plot() +
+  ggplot2::facet_wrap(~BY, nrow = 1) +
+  geom_vline(aes(xintercept = ifelse(statistic == 'mm', 0.5, 0)), size = .2)
+```
+
+
+```{r interaction, fig.height = 3, fig.cap = 'Weighted narginal means of the interaction between sexuality and the reason for migration'}
+int_cj <- cj(survey, chosen ~ sexuality, weights = ~weight, id = ~prolific_pid, estimate = 'mm', 
+             by = ~reason)
+int_cj_dif <- cj(survey, chosen ~ sexuality, weights = ~weight, id = ~prolific_pid, estimate = 'mm_diff', 
+                 by = ~reason)
+
+rbind(int_cj, int_cj_dif) %>%
+  mutate(BY = recode(BY, 'Could not find work' = 'Work',
+                     'Feared government persecution' = 'Persecution',
+                     'Feared government persecution - Could not find work' = 
+                       'Persecution - Work')) %>%
+  plot() + 
+  ggplot2::facet_wrap(~BY, ncol = 3) +
+  # geom_vline(xintercept = 0.5, size = .2)
+  geom_vline(aes(xintercept = ifelse(statistic == 'mm', 0.5, 0)), size = .2)
+```
+
+```{r mm, fig.height = 6, fig.cap = 'Weighted marginal means for heterogeneous effects by respondent characteristics. Standard errors are clustered within respondent'}
+cj(mutate(survey, educ = factor(educ, 
+                  levels = c('H.S. graduate or less', 'Some College', 'College graduate+'))), 
+                chosen ~ sexuality, estimate = 'mm',
+        weights = ~weight, id = ~prolific_pid, by = ~educ) %>%
+  mutate(variable = 'Education',
+         values = educ) %>%
+  bind_rows(
+    cj(mutate(survey, resp_politics = factor(str_to_sentence(resp_politics), 
+                  levels = c('Democrat', 'Republican', 'Other'))), 
+                chosen ~ sexuality, estimate = 'mm',
+        weights = ~weight, id = ~prolific_pid, by = ~resp_politics) %>%
+      mutate(variable = 'Politics',
+             values = resp_politics)) %>%
+  bind_rows(
+    cj(survey, chosen ~ sexuality, estimate = 'mm',
+        weights = ~weight, id = ~prolific_pid, by = ~resp_religion) %>%
+      mutate(variable = 'Religion',
+             values = resp_religion)) %>%
+  bind_rows(
+    cj(mutate(survey, resp_sexuality = factor(ifelse(resp_sexuality == 'Straight', 
+                                                 'Straight', 
+                                                 'Lesbian/gay/bi/other'))), 
+                chosen ~ sexuality, estimate = 'mm',
+        weights = ~weight, id = ~prolific_pid, by = ~resp_sexuality) %>%
+      mutate(variable = 'Sexuality',
+             values = resp_sexuality)) %>%
+  bind_rows(
+    cj(survey, chosen ~ sexuality, estimate = 'mm',
+        weights = ~weight, id = ~prolific_pid, by = ~resp_overpop) %>%
+      mutate(variable = 'Overpopulation concerns',
+             values = resp_overpop)) %>%
+  bind_rows(
+    cj(mutate(survey, know_LG = factor(know_LG, levels = c('Yes', 'No'))), 
+   chosen ~ sexuality, estimate = 'mm',
+        weights = ~weight, id = ~prolific_pid, by = ~know_LG) %>%
+     mutate(variable = 'Know lesbian/gay',
+            values = know_LG)) %>%
+  mutate(variable = factor(variable, levels = unique({.$variable})),
+         values = factor(values, levels = rev(unique({.$values})))) %>%
+  ggplot(aes(x = values, y = estimate, color = level)) +
+  geom_pointrange(position = position_dodge(-0.5), aes(ymin = lower, ymax = upper)) +
+  geom_hline(yintercept = .5, size = .2) +
+  facet_wrap(~variable, scales = 'free_y', nrow = 3) +
+  coord_flip() +
+  labs(x = '', y = '') +
+  theme(legend.position = 'bottom')
+
+
+
+```
+
+
+

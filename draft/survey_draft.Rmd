@@ -178,8 +178,8 @@ survey <- survey_raw %>%
       value_d == 'Immigrant 7 has greater shared values with the U.S.' & number == 7 ~ 1,
       value_d == 'Immigrant 8 has greater shared values with the U.S.' & number == 8 ~ 1,
       T ~ 0),
-    sexuality = factor(ifelse(sexuality %in% c('lesbian', 'gay'), 'lesbian or gay', 'straight'), 
-                       levels = c('straight', 'lesbian or gay')),
+    sexuality = factor(ifelse(sexuality %in% c('lesbian', 'gay'), 'Lesbian or gay', 'Straight'), 
+                       levels = c('Straight', 'Lesbian or gay')),
     across(c(gender, sexuality, gdp, skill, lang, religion, reason), function(x) factor(x)),
     across(c(rating, value), function(x) as.numeric(substr(x, 1,1)))) %>%
   mutate(skill = recode(skill, 
@@ -250,7 +250,16 @@ survey <- survey_raw %>%
            resp_gender == 'Man' ~ 'A man',
            resp_gender == 'Woman' ~ 'A woman',
            resp_gender == 'Other' ~ 'In some other way')
-         )
+         ) %>%
+  mutate(across(c(gdp, lang, reason, gender, skill, religion), ~as.factor(str_to_sentence(.x)))) %>%
+  mutate(skill = as.factor(ifelse(skill == 'Md', 'MD', skill))) %>%
+  mutate(Sexuality = sexuality, 
+         Gender = gender,
+         GDP = gdp,
+         Skill = skill,
+         Language = lang,
+         Religion = religion,
+         Reason = reason)
 
 
 # survey <- survey %>% slice(rep(row_number(), each = 10)) %>%
@@ -358,30 +367,42 @@ In addition to estimating average marginal component effects (AMCEs) for the att
 Finally, we test two mechanisms. First, we use the question on shared values to test whether the effect for LG migrants is explained by perceived cultural similarity. Second, we test the contact hypothesis [@lewis_2011_friends; @dellaposta_2018_gay] by assessing whether having gay or lesbian friends or family predicts support for gay and lesbian immigrants.    
 
 ## Hypotheses
-We calculate average marginal component effects (AMCEs) for the main effects and marginal means for interactions and heterogeneous effects. A positive AMCE for lesbian/gay identity implies that presentation of a lesbian/gay profile increases respondents' favorability toward admitting that immigrant, relative to a straight profile. A higher marginal mean for lesbian/gay identity implies greater likelihood of choosing lesbian/gay immigrants for admission.  
+We calculate average marginal component effects (AMCEs) for the main effects and marginal means for interactions and heterogeneous effects. A positive AMCE for lesbian/gay identity implies that presentation of a lesbian/gay profile increases respondents' favorability toward admitting that immigrant, relative to a straight profile. A higher marginal mean for lesbian/gay identity implies greater likelihood of choosing lesbian/gay immigrants for admission. We present our pre-registered hypotheses in Table \@ref(tab:hypotheses).
 
-- H1 (main effect): Lesbian/gay identity will have a positive AMCE, relative to straight identity.  
+```{r hypotheses}
+read_csv(here('draft', 'hypotheses.csv')) %>%
+  hux() %>%
+  huxtable::theme_article() %>%
+  set_valign('middle') %>%
+  huxtable::set_width(1) %>%
+  huxtable::set_all_padding(0) %>%
+  huxtable::set_latex_float('h!') %>%
+  huxtable::set_caption('Pre-registered hypotheses')
+```
 
-- H2 (mediation): Respondents who are more likely to choose lesbian/gay profiles for admission will choose them as having more shared values with the U.S., on average. Controlling for this measure of cultural similarity will attenuate the AMCE for lesbian/gay identity.  
 
-- H3 (interaction): For lesbian/gay profiles, persecution will have a higher marginal mean than work as a reason for migration.  
+<!-- - H1 (main effect): Lesbian/gay identity will have a positive AMCE, relative to straight identity.   -->
 
-Heterogeneous effects for marginal means for lesbian/gay identity:  
+<!-- - H2 (mediation): Respondents who are more likely to choose lesbian/gay profiles for admission will choose them as having more shared values with the U.S., on average. Controlling for this measure of cultural similarity will attenuate the AMCE for lesbian/gay identity.   -->
 
-- H4a (education): Respondents with a bachelor's degree will have a higher marginal mean than other education levels
-- H4b (political ideology): Democrats will have a higher marginal mean than Republicans  
-- H4c (religion): Christians will have a lower marginal mean than other groups  
-- H4d (sexuality): Lesbian/gay/bisexual respondents will have a higher marginal mean than straight respondents  
-- H4e (opinion): Respondents who worry about immigration contributing to overpopulation will have higher marginal means   
-- H4f (lesbian/gay contacts) Respondents who have lesbian/gay friends and family will have higher marginal means
+<!-- - H3 (interaction): For lesbian/gay profiles, persecution will have a higher marginal mean than work as a reason for migration.   -->
+
+<!-- Heterogeneous effects for marginal means for lesbian/gay identity:   -->
+
+<!-- - H4a (education): Respondents with a bachelor's degree will have a higher marginal mean than other education levels -->
+<!-- - H4b (political ideology): Democrats will have a higher marginal mean than Republicans   -->
+<!-- - H4c (religion): Christians will have a lower marginal mean than other groups   -->
+<!-- - H4d (sexuality): Lesbian/gay/bisexual respondents will have a higher marginal mean than straight respondents   -->
+<!-- - H4e (opinion): Respondents who worry about immigration contributing to overpopulation will have higher marginal means    -->
+<!-- - H4f (lesbian/gay contacts): Respondents who have lesbian/gay friends and family will have higher marginal means -->
 
 # Results 
 
 ```{r all-amces-calc}
-all_amces <- cj(survey, chosen ~  sexuality + gender + gdp + skill + lang + religion + reason, 
+all_amces <- cj(survey, chosen ~  Sexuality + Gender + GDP + Skill + Language + Religion + Reason, 
         id = ~prolific_pid)
 
-lg_amce <- all_amces %>% filter(level == 'lesbian or gay') %>% pull(estimate) %>% round(3)
+lg_amce <- all_amces %>% filter(level == 'Lesbian or gay') %>% pull(estimate) %>% round(3)
 ```
 
 
@@ -399,36 +420,39 @@ int_cj_dif <- cj(survey, chosen ~ sexuality, id = ~prolific_pid, estimate = 'mm_
                  by = ~reason)
 
 work_int <- int_cj %>% 
-  filter(BY == 'could not find work', level == 'lesbian or gay') %>% 
+  filter(BY == 'could not find work', level == 'Lesbian or gay') %>% 
   pull(estimate) %>%
   round(3)
 
 persecution_int <- int_cj %>% 
-  filter(BY == 'feared government persecution', level == 'lesbian or gay') %>% 
+  filter(BY == 'feared government persecution', level == 'Lesbian or gay') %>% 
   pull(estimate) %>%
   round(3)
 
-LG_int_dif <- int_cj_dif %>% filter(level == 'lesbian or gay') %>% pull(estimate) %>% round(3)
-straight_int_dif <- int_cj_dif %>% filter(level == 'straight') %>% pull(estimate) %>% round(3)
+LG_int_dif <- int_cj_dif %>% filter(level == 'Lesbian or gay') %>% pull(estimate) %>% round(3)
+straight_int_dif <- int_cj_dif %>% filter(level == 'Straight') %>% pull(estimate) %>% round(3)
 ```
 
 
 Figure \@ref(fig:interaction) presents interaction effects relevant to H3, which predicted that LG profiles with persecution as a reason for migration would be more likely to be chosen than those with economic reasons. The Figure supports this hypothesis: LG profiles that migrated to seek employment have a marginal mean of `r work_int`, while those fleeing persecution have a value of `r persecution_int`. This difference of `r LG_int_dif` is larger than the corresponding difference for straight profiles (`r straight_int_dif`), but not quite significantly so.  
 
-Figures \@ref(fig:mm-1) and \@ref(fig:mm-2) presents marginal means relevant for H4, yielding a number of significant results. H4a predicted that respondents with at least a bachelor's degree would see LG migrants as more deserving that straight ones, but results are more complicated. Respondents with advanced degrees or some college see LG immigrants as  more deserving than straight ones, but respondents with only a bachelor's degree do not. Democrats see LG immigrants as much more deserving than straight ones, while republicans see LG ones as far less deserving, in line with H4b. Results for religion  support H4c: Christians see LG immigrants as less deserving than atheists and the non-religious.  
+Figure \@ref(fig:mm) presents marginal means relevant for H4, yielding a number of significant results. H4a predicted that respondents with at least a bachelor's degree would see LG migrants as more deserving that straight ones, but results are more complicated. Respondents with advanced degrees or some college see LG immigrants as  more deserving than straight ones, but respondents with only a bachelor's degree do not. Democrats see LG immigrants as much more deserving than straight ones, while republicans see LG ones as far less deserving, in line with H4b. Results for religion  support H4c: Christians see LG immigrants as less deserving than atheists and the non-religious.  
 
-Moving on to Figure \@ref(fig:mm-2), if we consider sexuality, sexual minorities see LG immigrants as more deserving that straight ones, in line with H4d. Hypothesis H4e predicted that respondents who were worried about overpopulation would be more accepting of LG potential immigrants, but the marginal means show the opposite effect; respondents who worry about overpopulation are  less likely to choose LG profiles than straight ones, while respondents who do not worry about overpopulation are more likely to favor LG profiles. Finally H4f suggested that respondents with LG family and friends would be more likely to choose LG profiles for admission, and Figure \@ref(fig:mm-2) supports this.
+If we consider sexuality, sexual minorities see LG immigrants as more deserving that straight ones, in line with H4d. Hypothesis H4e predicted that respondents who were worried about overpopulation would be more accepting of LG potential immigrants, but the marginal means show the opposite effect; respondents who worry about overpopulation are  less likely to choose LG profiles than straight ones, while respondents who do not worry about overpopulation are more likely to favor LG profiles. Finally H4f suggested that respondents with LG family and friends would be more likely to choose LG profiles for admission, and Figure \@ref(fig:mm) supports this.  
+
+As a robustness test, we re-weight the data based on the July-August 2022 American Trends Panel [@pew_2022_american]. As shown in the appendix, general trends are substantively the same as in the unweighted data, however support for LG migrants is lower.
 
 
 
 # Discussion and Conclusion
 Do Americans perceive gay and lesbian immigrants as more deserving of entry to the U.S. compared to their straight counterparts? Addressing this question is important as the number of gay and lesbian immigrants in the U.S. rose dramatically after 2010. This increase was due, in part, to changes in federal immigration policies that made LGBTQ communities a "population of concern" in the asylum process, and same-sex couples becoming eligible for fiance(é)/spousal policies after the Defense of Marriage Act was overturned [@hoffmann_2023_sexuality; @vogler_2016]. Yet, despite these increases, no study has explicitly evaluated how Americans view this population. Therefore, our conjoint survey experiment provides an important contribution to understanding how Americans perceive gay and lesbian migrants. 
 
-We theorized that Americans would determine sexual minorities as more deserving than their straight counterparts due to perceived cultural similarity with the U.S. Yet, there is insufficient evidence that Americans deserve gay and lesbian migrants as more deserving of entry than their straight counterparts. Although the coefficient is in the positive direction in these models, it flips directions and maintains its insignificance in the weighted models included in the appendix. One reason for this lack of effect may be because despite our theorization, Americans do not view gay and lesbian migrants as culturally similar to the U.S. In fact, profiles identifying as a sexual minority are perceived as significantly *less* culturally similar. 
+We theorized that Americans would determine sexual minorities as more deserving than their straight counterparts due to perceived cultural similarity with the U.S. Yet, there is insufficient evidence that Americans deserve gay and lesbian migrants as more deserving of entry than their straight counterparts. Although the coefficient is in the positive direction in these models, it flips directions and maintains its nonsignificance in the weighted models included in the appendix. One reason for this lack of effect may be because despite our theorization, Americans do not view gay and lesbian migrants as culturally similar to the U.S. In fact, profiles identifying as a sexual minority are perceived as significantly *less* culturally similar. 
 
-There are three important sources of heterogeneity underneath these top-line effects, however. First, although there is some nuance, those that are better educated, Democratic, atheist, or themselves identify as/know someone who does identify as LG, generally find LG migrants as more deserving compared to straight migrants. Views of LG migrants may not cut across traditional attitudes toward migration and/or LGBTQ issues, then, but be another reflection of the same underlying processes like partisan polarization. Second, one instance in which there is overall perceived deservingness of LG migrants is when they are coming to U.S. for humanitarian reasons as opposed to economic -- supporting prior research that Americans prefer granting entry for humanitarian reasons [xx]. And, third, while Americans view LG migrants as less culturally similar, *when they do* find them more similar, they prefer them over straight migrants. Conditional on establishing perceived cultural similarity, then, LG migrants do receive a boost.
+There are three important sources of heterogeneity underneath these top-line effects, however. First, although there is some nuance, those that are better educated, Democratic, atheist, or themselves identify as/know someone who does identify as LG, generally find LG migrants as more deserving compared to straight migrants. Views of LG migrants may not cut across traditional attitudes toward migration and/or LGBTQ issues, then, but be another reflection of the same underlying processes like partisan polarization. Second, one instance in which there is overall perceived deservingness of LG migrants is when they are coming to U.S. for humanitarian reasons as opposed to economic -- supporting prior research that citizens show support for granting entry to humanitarian migrants [@bansak_2016_how; @hedegaard_2022_attitudes]. And, third, while Americans view LG migrants as less culturally similar, *when they do* find them more similar, they prefer them over straight migrants. Conditional on establishing perceived cultural similarity, then, LG migrants do receive a boost.
 
-There are important limitations to this study that should be addressed through future research. For example, while we include models that using some population weights in the appendix, future studies should use a nationally-representative sample. Additionally, while our primary hypothesis is null, this study finds several sources of heterogeneity. If our primary mechanism of cultural similarity does not seem to be the primary driver of U.S. attitudes' toward LG migrants -- what is? Initial findings suggest perceived humanitarian need, especially amidst rising global backlash, or overall partisan polarization may be more substantive routes to explore. Nevertheless, this initial study offers an important first step into how Americans view the deservingness of LG migrants within an experimental framework. More research is needed to fully explore the contours of this dramatically growing population.
+There are important limitations to this study that should be addressed through future research. For example, while we include models that use some population weights in the appendix, future studies should use a nationally representative sample. Additionally, while our primary hypothesis is not supported, this study finds several sources of heterogeneity. If our primary mechanism of cultural similarity does not seem to be the primary driver of U.S. attitudes toward LG migrants, what is? Initial findings suggest perceived humanitarian need, especially amid rising global backlash, or overall partisan polarization may be more substantive routes to explore. Nevertheless, this initial study offers an important first step toward understanding how Americans view the deservingness of LG migrants within an experimental framework. More research is needed to fully explore the contours of this dramatically growing population.
+
 
 \newpage
 
@@ -441,7 +465,7 @@ plot(all_amces)
 
 ```{r value-amces, fig.cap = 'Estimated  AMCEs for cultural similarity for all attributes. Standard errors are clustered within respondent.'}
 
-  plot(cj(survey, value_chosen ~  sexuality + gender + gdp + skill + lang + religion + reason, 
+plot(cj(survey, value_chosen ~  Sexuality + Gender + GDP + Skill + Language + Religion + Reason, 
         id = ~prolific_pid)) 
 
 ```
@@ -474,74 +498,71 @@ mediation_cj %>%
 
 ```{r interaction, fig.height = 3, fig.cap = 'Marginal means of the interaction between sexuality and the reason for migration'}
 rbind(int_cj, int_cj_dif) %>%
-  mutate(BY = recode(BY, 'could not find work' = 'work',
-                     'feared government persecution' = 'persecution',
-                     'feared government persecution - could not find work' = 
-                       'persecution - work')) %>%
+  mutate(BY = recode(BY, 'Could not find work' = 'Work',
+                     'Feared government persecution' = 'Persecution',
+                     'Feared government persecution - Could not find work' = 
+                       'Persecution - Work')) %>%
   plot() + 
   ggplot2::facet_wrap(~BY, ncol = 3) +
   # geom_vline(xintercept = 0.5, size = .2)
   geom_vline(aes(xintercept = ifelse(statistic == 'mm', 0.5, 0)), size = .2)
 ```
 
+```{r mm, fig.height = 6, fig.cap = 'Marginal means for heterogeneous effects by respondent characteristics. Standard errors are clustered within respondent'}
+cj(mutate(survey, educ = factor(educ, 
+                  levels = c('H.S. graduate or less', 'Some College', 'College graduate+'))), 
+                chosen ~ sexuality, estimate = 'mm',
+        id = ~prolific_pid, by = ~educ) %>%
+  mutate(variable = 'Education',
+         values = educ) %>%
+  bind_rows(
+    cj(mutate(survey, resp_politics = factor(str_to_sentence(resp_politics), 
+                  levels = c('Democrat', 'Republican', 'Other'))), 
+                chosen ~ sexuality, estimate = 'mm',
+        id = ~prolific_pid, by = ~resp_politics) %>%
+      mutate(variable = 'Politics',
+             values = resp_politics)) %>%
+  bind_rows(
+    cj(survey, chosen ~ sexuality, estimate = 'mm',
+        id = ~prolific_pid, by = ~resp_religion) %>%
+      mutate(variable = 'Religion',
+             values = resp_religion)) %>%
+  bind_rows(
+    cj(mutate(survey, resp_sexuality = factor(ifelse(resp_sexuality == 'Straight', 
+                                                 'Straight', 
+                                                 'Lesbian/gay/bi/other'))), 
+                chosen ~ sexuality, estimate = 'mm',
+        id = ~prolific_pid, by = ~resp_sexuality) %>%
+      mutate(variable = 'Sexuality',
+             values = resp_sexuality)) %>%
+  bind_rows(
+    cj(survey, chosen ~ sexuality, estimate = 'mm',
+        id = ~prolific_pid, by = ~resp_overpop) %>%
+      mutate(variable = 'Overpopulation concerns',
+             values = resp_overpop)) %>%
+  bind_rows(
+    cj(mutate(survey, know_LG = factor(know_LG, levels = c('Yes', 'No'))), 
+   chosen ~ sexuality, estimate = 'mm',
+        id = ~prolific_pid, by = ~know_LG) %>%
+     mutate(variable = 'Know lesbian/gay',
+            values = know_LG)) %>%
+  mutate(variable = factor(variable, levels = unique({.$variable})),
+         values = factor(values, levels = rev(unique({.$values})))) %>%
+  ggplot(aes(x = values, y = estimate, color = level)) +
+  geom_pointrange(position = position_dodge(-0.5), aes(ymin = lower, ymax = upper)) +
+  geom_hline(yintercept = .5, size = .2) +
+  facet_wrap(~variable, scales = 'free_y', nrow = 3) +
+  coord_flip() +
+  labs(x = '', y = '') +
+  theme(legend.position = 'bottom')
 
 
 
 
 
-```{r mm-1, fig.height = 7, fig.cap = 'Marginal means. Standard errors are clustered within respondent.'}
-# (plot(cj(mutate(survey, resp_bachelor = as.factor(resp_education %in% 
-#                     c("Bachelor's degree", "Master's, doctorate, or other postgraduate degree"))), 
-#          chosen ~ sexuality, estimate = 'mm',
-#         id = ~prolific_pid, by = ~ resp_bachelor),
-#         group = 'resp_bachelor') +
-#   geom_vline(xintercept = .5, size = .2) +
-#   theme(legend.position = 'right'))
 
-
-(plot(cj(survey, chosen ~ sexuality, estimate = 'mm',
-        id = ~prolific_pid, by = ~ resp_education),
-        group = 'resp_education') +
-  geom_vline(xintercept = .5, size = .2) +
-  theme(legend.position = 'right')) /
-(plot(cj(survey, chosen ~ sexuality, estimate = 'mm',
-        id = ~prolific_pid, by = ~ resp_politics),
-        group = 'resp_politics') +
-  geom_vline(xintercept = .5, size = .2) +
-  theme(legend.position = 'right')) /
-(plot(cj(survey, chosen ~ sexuality, estimate = 'mm',
-        id = ~prolific_pid, by = ~resp_religion),
-        group = 'resp_religion') +
-  geom_vline(xintercept = .5, size = .2) +
-  theme(legend.position = 'right')) 
 ```
 
-```{r mm-2, fig.height = 7, fig.cap = 'Marginal means. Standard errors are clustered within respondent.'}
-
-(plot(cj(survey, chosen ~ sexuality, estimate = 'mm',
-        id = ~prolific_pid, by = ~ resp_sexuality),
-        group = 'resp_sexuality') +
-  geom_vline(xintercept = .5, size = .2) +
-  theme(legend.position = 'right')) /
-(plot(cj(survey, chosen ~ sexuality, estimate = 'mm',
-        id = ~prolific_pid, by = ~ resp_overpop),
-        group = 'resp_overpop') +
-  geom_vline(xintercept = .5, size = .2) +
-  theme(legend.position = 'right')) /
-(plot(cj(survey, chosen ~ sexuality, estimate = 'mm',
-        id = ~prolific_pid, by = ~know_LG),
-        group = 'know_LG') +
-  geom_vline(xintercept = .5, size = .2) +
-  theme(legend.position = 'right')) 
-
-# (plot(cj(mutate(survey, resp_knowlg = factor(resp_knowlg, 
-#               levels = c("I'm not sure", "No, none", "One", "Two to five", "More than five"))), 
-#          value_chosen ~ sexuality, estimate = 'mm',
-#         id = ~prolific_pid, by = ~resp_knowlg),
-#         group = 'resp_knowlg') +
-#   geom_vline(xintercept = .5, size = .2) +
-#   theme(legend.position = 'right')) 
-```
 
 
 ```{r, eval = F}
@@ -626,118 +647,6 @@ ggsave(here('pres/mm1.png'), width = 8, height = 8)
   labs(x = '')
 
 ggsave(here('pres/mm2.png'), width = 8, height = 8)
-```
-
-
-\newpage
-
-# With weights
-```{r all-amces-weight, fig.cap = 'Weighted estimated  AMCEs for admission for all attributes. Standard errors are clustered within respondent.'}
-
-plot(cj(survey, chosen ~  sexuality + gender + gdp + skill + lang + religion + reason, 
-        weights = ~weight,
-        id = ~prolific_pid))
-
-```
-
-```{r value-amces-weight, fig.cap = 'Weighted estimated  AMCEs for cultural similarity for all attributes. Standard errors are clustered within respondent.'}
-
-  plot(cj(survey, value_chosen ~  sexuality + gender + gdp + skill + lang + religion + reason, 
-          weights = ~weight,
-        id = ~prolific_pid)) 
-
-```
-
-
-```{r mediation-weight, eval = T, fig.cap = 'Weighted AMCEs for admission for sexuality, stratified by whether the profile received a 6 or 7 out of 7 on cultural similarity ratings'}
-mediation_cj <- survey %>%
-  mutate(top_value = factor(case_when(value >= 6 ~ '6 or 7 on cultural similarity',
-                               T ~ '1 to 5 on cultural similarity'))) %>% 
-  cj(., chosen ~ sexuality, id = ~prolific_pid, estimate = 'amce', 
-     weights = ~weight,
-             by = ~top_value)
-
-mediation_cj %>%
-  plot() +
-  ggplot2::facet_wrap(~BY, nrow = 1) +
-  geom_vline(aes(xintercept = ifelse(statistic == 'mm', 0.5, 0)), size = .2)
-```
-
-
-```{r interaction-weight, fig.height = 3, fig.cap = 'Weighted marginal means of the interaction between sexuality and the reason for migration'}
-rbind(cj(survey, chosen ~ sexuality, id = ~prolific_pid, estimate = 'mm', 
-         weights = ~weight,
-             by = ~reason), 
-      cj(survey, chosen ~ sexuality, id = ~prolific_pid, estimate = 'mm_diff', 
-         weights = ~weight,
-                 by = ~reason)) %>%
-  mutate(BY = recode(BY, 'could not find work' = 'work',
-                     'feared government persecution' = 'persecution',
-                     'feared government persecution - could not find work' = 
-                       'persecution - work')) %>%
-  plot() + 
-  ggplot2::facet_wrap(~BY, ncol = 3) +
-  # geom_vline(xintercept = 0.5, size = .2)
-  geom_vline(aes(xintercept = ifelse(statistic == 'mm', 0.5, 0)), size = .2)
-```
-
-
-
-
-
-
-```{r mm-1-weight, fig.height = 7, fig.cap = 'Weighted marginal means. Standard errors are clustered within respondent.'}
-# (plot(cj(mutate(survey, resp_bachelor = as.factor(resp_education %in% 
-#                     c("Bachelor's degree", "Master's, doctorate, or other postgraduate degree"))), 
-#          chosen ~ sexuality, estimate = 'mm',
-#         weights = ~weight, id = ~prolific_pid, by = ~ resp_bachelor),
-#         group = 'resp_bachelor') +
-#   geom_vline(xintercept = .5, size = .2) +
-#   theme(legend.position = 'right'))
-
-
-(plot(cj(survey, chosen ~ sexuality, estimate = 'mm',
-        weights = ~weight, id = ~prolific_pid, by = ~ resp_education),
-        group = 'resp_education') +
-  geom_vline(xintercept = .5, size = .2) +
-  theme(legend.position = 'right')) /
-(plot(cj(survey, chosen ~ sexuality, estimate = 'mm',
-        weights = ~weight, id = ~prolific_pid, by = ~ resp_politics),
-        group = 'resp_politics') +
-  geom_vline(xintercept = .5, size = .2) +
-  theme(legend.position = 'right')) /
-(plot(cj(survey, chosen ~ sexuality, estimate = 'mm',
-        weights = ~weight, id = ~prolific_pid, by = ~resp_religion),
-        group = 'resp_religion') +
-  geom_vline(xintercept = .5, size = .2) +
-  theme(legend.position = 'right')) 
-```
-
-```{r mm-2-weight, fig.height = 7, fig.cap = 'Weighted marginal means. Standard errors are clustered within respondent.'}
-
-(plot(cj(survey, chosen ~ sexuality, estimate = 'mm',
-        weights = ~weight, id = ~prolific_pid, by = ~ resp_sexuality),
-        group = 'resp_sexuality') +
-  geom_vline(xintercept = .5, size = .2) +
-  theme(legend.position = 'right')) /
-(plot(cj(survey, chosen ~ sexuality, estimate = 'mm',
-        weights = ~weight, id = ~prolific_pid, by = ~ resp_overpop),
-        group = 'resp_overpop') +
-  geom_vline(xintercept = .5, size = .2) +
-  theme(legend.position = 'right')) /
-(plot(cj(survey, chosen ~ sexuality, estimate = 'mm',
-        weights = ~weight, id = ~prolific_pid, by = ~know_LG),
-        group = 'know_LG') +
-  geom_vline(xintercept = .5, size = .2) +
-  theme(legend.position = 'right')) 
-
-# (plot(cj(mutate(survey, resp_knowlg = factor(resp_knowlg, 
-#               levels = c("I'm not sure", "No, none", "One", "Two to five", "More than five"))), 
-#          value_chosen ~ sexuality, estimate = 'mm',
-#         weights = ~weight, id = ~prolific_pid, by = ~resp_knowlg),
-#         group = 'resp_knowlg') +
-#   geom_vline(xintercept = .5, size = .2) +
-#   theme(legend.position = 'right')) 
 ```
 
 
