@@ -364,6 +364,8 @@ We fielded the survey on June 20, 2023, to 1,650 U.S. citizen respondents using 
 
 
 \begin{table}
+\centering
+\caption{Immigrants profiles are created by randomly drawing one value from each of these seven attributes}
 \begin{tabular}{p{0.3\linewidth}  p{0.5\linewidth}}
 \toprule 
 \bf{Attribute} & \bf{Vignette text} \\
@@ -397,7 +399,6 @@ Reason for migration
 & \tabitem could not find work due to high unemployment \\
 \bottomrule
 \end{tabular}
-\caption{Immigrants profiles are created by randomly drawing one value from each of these seven attributes}
 \label{tab:attributes}
 \end{table}
 
@@ -420,7 +421,7 @@ read_csv(here('draft', 'hypotheses.csv')) %>%
   huxtable::theme_article() %>%
   set_valign('middle') %>%
   huxtable::set_width(1) %>%
-  huxtable::set_all_padding(0) %>%
+  # huxtable::set_all_padding(0) %>%
   huxtable::set_latex_float('h!') %>%
   huxtable::set_caption('Pre-registered hypotheses')
 ```
