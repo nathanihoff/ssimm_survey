@@ -19,9 +19,9 @@ editor_options:
   chunk_output_type: console
   
 citeproc: no
-# fontfamily: mathpazo
+fontfamily: mathpazo
 # mainfont: "Times New Roman"
-# fontsize: 12pt
+fontsize: 12pt
 geometry: margin=1in
 indent: yes
 link-citations: yes
@@ -252,7 +252,8 @@ survey <- survey_raw %>%
            resp_gender == 'Other' ~ 'In some other way')
          ) %>%
   mutate(across(c(gdp, lang, reason, gender, skill, religion), ~as.factor(str_to_sentence(.x)))) %>%
-  mutate(skill = as.factor(ifelse(skill == 'Md', 'MD', skill))) %>%
+  mutate(skill = as.factor(ifelse(skill == 'Md', 'MD', as.character(skill)))) %>% 
+                        #levels = c('Primary school', 'High school', 'MD'))) %>%
   mutate(Sexuality = sexuality, 
          Gender = gender,
          GDP = gdp,
@@ -304,10 +305,116 @@ survey <- survey %>%
 ```
 
 
+# Survey Instrument
+
+A PDF of our full Qualtrics survey is available in the supplementary material. Below is material from the core of the survey, a vignette with accompanying questions.
+
+
+*Please carefully read the following two descriptions of potential immigrants to the United States. Then indicate which one you personally would prefer to see admitted to the United States.*  
+
+
+> Immigrant [1/2] wishes to be admitted as an immigrant to the U.S. [He/she] comes from a [GDP] country, [Skill]. [He/she] [Language], is [Religion], and identifies as [Sexuality]. [He/she] had to leave [his/her] country because [he/she] [reason].  
+
+
+Randomize:  
+\begin{tabular}{p{0.3\linewidth}  p{0.5\linewidth}}
+\hline
+\bf{Attribute} & \bf{Vignette text} \\
+\hline
+Gender & \tabitem man \\
+& \tabitem woman \\
+ \\
+Country GDP
+& \tabitem moderately wealthy \\
+& \tabitem low-income \\
+
+ \\
+Skill
+& \tabitem has an MD and works as a cardiologist \\
+& \tabitem has a high school degree and works as a restaurant manager \\
+& \tabitem has a primary school education and works as a cleaner \\
+
+ \\
+Language
+& \tabitem speaks English \\
+& \tabitem does not speak English \\
+ \\
+Religion
+& \tabitem Christian \\
+& \tabitem Muslim \\
+
+ \\
+Sexuality
+& \tabitem gay/lesbian \\
+& \tabitem straight (that is, not gay/lesbian) \\
+ \\
+Reason for migration
+& \tabitem feared government persecution \\
+& \tabitem could not find work due to high unemployment \\
+\hline
+\end{tabular}
+
+\newpage 
+
+Example:  
+\begin{tabular}{p{0.45\linewidth}  p{0.45\linewidth}}
+\hline
+\bf{Immigrant 1} & \bf{Immigrant 2} \\
+\hline
+Immigrant 1 is a woman from a moderately wealthy country. She has a primary school education and works as a teacher. She speaks English, is Muslim, and identifies as lesbian. She had to leave her country because she could not find work due to high unemployment.
+& Immigrant 2 is a man from a low-income country. He has an MD and works as a cardiologist. He does not speak English, is Christian, and identifies as straight (that is, not gay). He had to leave his country because he feared government persecution. \\
+ \hline
+\end{tabular}  
+
+\vspace{1cm}  
+
+1. *Based on their descriptions, which of these two immigrants would you personally prefer to see admitted to the United States?*  
+
+- Immigrant 1 should be admitted
+- Immigrant 2 should be admitted
+  
+2. *Based on their descriptions, which of these two immigrants do you think has greater shared values with the United States?*  
+
+- Immigrant 1 has greater shared values with the U.S.
+- Immigrant 2 has greater shared values with the U.S.
+
 
 # Weighted Results
 
-To re-weight the Prolific survey sample to be closer to the U.S. population, we construct inverse probability weights using the July-August 2022 American Trends Panel (Wave 112, n = `r nrow(pew)`) [@pew_2022_american], based on four variables: political party, age (in four categories), education, and gender. 
+To re-weight the Prolific survey sample to be closer to the U.S. population, we construct inverse probability weights using the July-August 2022 American Trends Panel (Wave 112, n = `r nrow(pew)`), based on four variables: political party, age (in four categories), education, and gender. Unfortunately, Prolific does not provide an ethnicity variable that is suitable for U.S. data. Tables \@ref(tab:desc-pew) and \@ref(tab:desc-survey) present the distributions of the weighting variables in the Pew survey and our own Prolific survey, respectively.
+
+```{r desc-pew}
+gtsummary::theme_gtsummary_compact()
+pew %>%
+  select(Party = party, `Age category` = age_cat, Education = educ, Gender = gender_pew) %>%
+  gtsummary::tbl_summary() %>%
+  gtsummary::as_hux_table() %>%
+  huxtable::set_italic(c(2,7,13, 18), 1) %>%
+  huxtable::theme_article() %>%
+  #huxtable::set_width(1) %>%
+  huxtable::set_all_padding(0) %>%
+  huxtable::set_latex_float('h!') %>%
+  huxtable::set_caption('Distributions of variables used for weighting in the Pew July-August 2022 American Trends Panel')
+  
+```
+
+
+```{r desc-survey}
+gtsummary::theme_gtsummary_compact()
+survey %>%
+  select(Party = party, `Age category` = age_cat, Education = educ, Gender = gender_pew) %>%
+  gtsummary::tbl_summary() %>%
+  gtsummary::as_hux_table() %>%
+  huxtable::set_italic(c(2,6,12, 16), 1) %>%
+  huxtable::theme_article() %>%
+  #huxtable::set_width(1) %>%
+  huxtable::set_all_padding(0) %>%
+  huxtable::set_latex_float('h!') %>%
+  huxtable::set_caption('Distributions of variables used for weighting in our 2023 survey experiment administered with Prolific') 
+```
+
+
+\newpage
 
 ```{r all-amces, fig.cap = 'Weighted AMCEs for admission for all attributes. Standard errors are clustered within respondent.'}
 
@@ -385,13 +492,13 @@ cj(mutate(survey, educ = factor(educ,
   bind_rows(
     cj(survey, chosen ~ sexuality, estimate = 'mm',
         weights = ~weight, id = ~prolific_pid, by = ~resp_overpop) %>%
-      mutate(variable = 'Overpopulation concerns',
+      mutate(variable = 'Overpopulation Concerns',
              values = resp_overpop)) %>%
   bind_rows(
     cj(mutate(survey, know_LG = factor(know_LG, levels = c('Yes', 'No'))), 
    chosen ~ sexuality, estimate = 'mm',
         weights = ~weight, id = ~prolific_pid, by = ~know_LG) %>%
-     mutate(variable = 'Know lesbian/gay',
+     mutate(variable = 'Know LG',
             values = know_LG)) %>%
   mutate(variable = factor(variable, levels = unique({.$variable})),
          values = factor(values, levels = rev(unique({.$values})))) %>%
