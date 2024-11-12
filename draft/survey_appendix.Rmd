@@ -65,6 +65,8 @@ theme_set(theme_classic(base_family = 'Palatino') +
                   legend.background = element_rect(fill = "transparent")))
 ggplot <- function(...) ggplot2::ggplot(...) + scale_color_brewer(palette="Dark2") +
   scale_fill_brewer(palette="Dark2")
+
+# find . -name "Icon?" -print0 | xargs -0 rm -rf
 ```
 
 ```{r load}
