@@ -570,9 +570,66 @@ cj(mutate(survey, educ = factor(educ,
 
 \newpage
 
+# Heterogeneous Effects for Cultural Similarity (Marginal Means)
+
+```{r mm-values, fig.height = 6, fig.cap = 'Marginal means for heterogeneous effects of considering more culturally similar, by respondent characteristics. Standard errors are clustered within respondent.'}
+cj(mutate(survey, educ = factor(educ, 
+                  levels = c('H.S. graduate or less', 'Some College', 'College graduate+'))), 
+                value_chosen ~ sexuality, estimate = 'mm',
+        weights = ~weight, id = ~prolific_pid, by = ~educ) %>%
+  mutate(variable = 'Education',
+         values = educ) %>%
+  bind_rows(
+    cj(mutate(survey, resp_politics = factor(str_to_sentence(resp_politics), 
+                  levels = c('Democrat', 'Republican', 'Other'))), 
+                value_chosen ~ sexuality, estimate = 'mm',
+        weights = ~weight, id = ~prolific_pid, by = ~resp_politics) %>%
+      mutate(variable = 'Politics',
+             values = resp_politics)) %>%
+  bind_rows(
+    cj(survey, value_chosen ~ sexuality, estimate = 'mm',
+        weights = ~weight, id = ~prolific_pid, by = ~resp_religion) %>%
+      mutate(variable = 'Religion',
+             values = resp_religion)) %>%
+  bind_rows(
+    cj(mutate(survey, resp_sexuality = factor(ifelse(resp_sexuality == 'Straight', 
+                                                 'Straight', 
+                                                 'Lesbian/gay/bi/other'))), 
+                value_chosen ~ sexuality, estimate = 'mm',
+        weights = ~weight, id = ~prolific_pid, by = ~resp_sexuality) %>%
+      mutate(variable = 'Sexuality',
+             values = resp_sexuality)) %>%
+  bind_rows(
+    cj(survey, value_chosen ~ sexuality, estimate = 'mm',
+        weights = ~weight, id = ~prolific_pid, by = ~resp_overpop) %>%
+      mutate(variable = 'Overpopulation Concerns',
+             values = resp_overpop)) %>%
+  bind_rows(
+    cj(mutate(survey, know_LG = factor(know_LG, levels = c('Yes', 'No'))), 
+   value_chosen ~ sexuality, estimate = 'mm',
+        weights = ~weight, id = ~prolific_pid, by = ~know_LG) %>%
+     mutate(variable = 'Know LG',
+            values = know_LG)) %>%
+  mutate(variable = factor(variable, levels = unique({.$variable})),
+         values = factor(values, levels = rev(unique({.$values})))) %>%
+  ggplot(aes(x = values, y = estimate, color = level, shape = level)) +
+  geom_pointrange(position = position_dodge(-0.5), aes(ymin = lower, ymax = upper)) +
+  geom_hline(yintercept = .5, linewidth = .2) +
+  facet_wrap(~variable, scales = 'free_y', nrow = 3) +
+  coord_flip() +
+  labs(x = '', y = '') +
+  theme(legend.position = 'bottom')
 
 
-# Additional Interactions
+
+
+
+
+```
+
+\newpage
+
+# Additional Interactions for Admission
 
 ```{r interaction-all, fig.height = 7, fig.cap = 'Marginal means of the interaction between sexuality and other features'}
 bind_rows(
@@ -625,6 +682,8 @@ bind_rows(
 ```
 
 \newpage
+
+
 
 # Full Tables for Results from Main Paper
 
