@@ -10,11 +10,11 @@ output:
     keep_tex: no
 header-includes:
   - \usepackage{setspace}
-  - \usepackage{fancyhdr}
-  - \pagestyle{fancy}
-  - \setlength{\headheight}{15pt}
-  - \lhead{Hoffmann and Velasco}
-  - \rhead{`r format(Sys.time(), '%B %e, %Y')`}
+  # - \usepackage{fancyhdr}
+  # - \pagestyle{fancy}
+  # - \setlength{\headheight}{15pt}
+  # - \lhead{Hoffmann and Velasco}
+  # - \rhead{`r format(Sys.time(), '%B %e, %Y')`}
 editor_options: 
   chunk_output_type: console
   
@@ -29,23 +29,19 @@ linkcolor: blue
 bibliography: "/Users/nathan/My Drive/Projects/2020 Same-Sex Immigrant Couples/Same-Sex Immigration.bib"
 csl: chicago-author-date.csl
 title: "How Sexuality Affects Evaluations of Immigrant Deservingness and Cultural Similarity: A Conjoint Survey Experiment"
-date: "`r format(Sys.time(), '%B %e, %Y')`"
+# date: "`r format(Sys.time(), '%B %e, %Y')`"
 # author:
-# - Nathan I. Hoffmann^[Department of Sociology, University of California, Los Angeles]
-# - Kristopher Velasco^[Department of Sociology, Princeton University]
-author:
-- Nathan I. Hoffmann, Department of Sociology, University of California, Los Angeles
-- Kristopher Velasco, Department of Sociology, Princeton University
+# - Nathan I. Hoffmann, Department of Sociology, University of California, Los Angeles
+# - Kristopher Velasco, Department of Sociology, Princeton University
 
   
 
   
 
-# abstract: "Do Americans view lesbian and gay (LG) migrants as more deserving of entry to the U.S. than their straight counterparts? Recent changes in U.S. federal policy have contributed to significant increases in LG migration, yet little is known about how Americans view this expanding population. Although Americans are increasingly polarized on their views toward migration, support for gay and lesbian migrants may be cross-cutting. Using a conjoint survey experiment of 1,650 respondents, we investigate how immigrants' sexual-minority status affects Americans' perceptions of their deservingness for admission. Moreover, we evaluate how deservingness is related to evaluations of cultural similarity. Analyses consider interactions between reason for migration, skill, and sexuality as well as heterogeneous effects based on respondent profiles. Results show that Americans overall do not perceive LG migrants as more deserving compared to straight ones, and LG migrants are perceived as less culturally similar. LG immigrants fleeing persecution are seen as more deserving of admission, and Democrats, atheists, and LG respondents consider LG migrants more deserving. This paper helps disentangle Americans' preferences for migrants' presumed cultural similarity from economic potential and humanitarian merit as well as elucidate public opinion of this under-studied group of sexual-minority migrants."
 
 abstract: "In the wake of significant increases in lesbian and gay (LG) immigration, do Americans view LG migrants as more deserving of entry to the U.S. than their straight counterparts? Using a conjoint survey experiment with 1,650 respondents, we investigate how potential immigrants' sexual-minority status affects Americans' perceptions of their deservingness for admission and their cultural similarity to the U.S. Results show that, overall, Americans do not perceive LG immigrants as more deserving than straight ones, and LG immigrants are perceived as less culturally similar. But survey results reveal heterogeneity: LG immigrants fleeing persecution are seen as more deserving of admission, and Democrats, atheists, and LG respondents consider LG migrants more deserving than straight ones. This paper helps disentangle Americans' preferences for migrants' presumed cultural similarity from economic potential and humanitarian merit as well as elucidate public opinion of an under-studied but politically salient group."
 
-thanks: "We thank Natasha Quadlin, Marta Tienda, Sam Trejo, and participants at the 2024 Population Association of America Annual Meeting in Columbus, Ohio, for their helpful feedback on the survey and previous versions of this paper."
+# thanks: "We thank Natasha Quadlin, Marta Tienda, Sam Trejo, and participants at the 2024 Population Association of America Annual Meeting in Columbus, Ohio, for their helpful feedback on the survey and previous versions of this paper."
 
 ---
 
@@ -371,7 +367,7 @@ We use a conjoint survey experiment to isolate these components of deservingness
 
 
 
-After conducting a pilot study (details in the Online Appendix), we fielded the main survey on June 20, 2023, to 1,650 U.S. citizen respondents using Prolific.^[This study was pre-registered on OSF, and we did not deviate from our planned analyses except where specified: https://osf.io/26wfm/?view_only=922595b5c55f40b98b77fb922c7f115d] The Online Appendix contains details of the ethical principles we adhered to during data collection. The conjoint survey design asks respondents to read two vignettes describing hypothetical immigrants and choose the one they prefer to gain entry to the United States. Each respondent completed this task four times. We vary seven features of immigrant profiles: gender, country GDP, skill, language, religion, sexuality, and reason for migration (see Table \@ref(tab:features) for details). In all, this creates 192 potential profiles for respondents to evaluate. We re-weight the data to better match the U.S. population as a whole, using the July-August 2022 American Trends Panel [@pew_2022_american]; see the Online Appendix for details. Due to missing data for age, we drop 29 respondents from analysis, resulting in final sample of 1,621.  
+After conducting a pilot study (details in the Online Appendix §H), we fielded the main survey on June 20, 2023, to 1,650 U.S. citizen respondents using Prolific.^[This study was pre-registered on OSF, and we did not deviate from our planned analyses except where specified: https://osf.io/26wfm/?view_only=922595b5c55f40b98b77fb922c7f115d] The Online Appendix §B contains details of the ethical principles we adhered to during data collection. The conjoint survey design asks respondents to read two vignettes describing hypothetical immigrants and choose the one they prefer to gain entry to the United States. Each respondent completed this task four times. We vary seven features of immigrant profiles: gender, country GDP, skill, language, religion, sexuality, and reason for migration (see Table \@ref(tab:features) for details). In all, this creates 192 potential profiles for respondents to evaluate. We re-weight the data to better match the U.S. population as a whole, using the July-August 2022 American Trends Panel [@pew_2022_american]; see the Online Appendix §C for details. Due to missing data for age, we drop 29 respondents from analysis, resulting in final sample of 1,621.  
 
 
 
@@ -430,7 +426,7 @@ read_csv(here('draft', 'hypotheses.csv')) %>%
 
 One example profile reads: "Immigrant 1 wishes to be admitted as an immigrant to the United States. She comes from a moderately wealthy country, has a primary school education, and works as a cleaner. She does not speak English, is Christian, and identifies as lesbian. She had to leave her country because she could not find work due to high unemployment."  
 
-After choosing which profile they wish to see admitted to the U.S., respondents choose which profile they believe has greater shared values with the U.S. After being shown four sets of profiles, respondents are asked whether they have any friends or family members who are lesbian or gay. The full survey instrument is available in the Supplemental Material.  
+Respondents are asked two questions: (1) "Based on their descriptions, which of these two immigrants **would you personally prefer to see admitted** to the United States?", and (2) "Based on their descriptions, which of these two immigrants do you think **has greater shared values with the United States**?" After answering these questions for four sets of profiles, respondents are asked about a variety of personal attributes. The full survey instrument is available in the Supplemental Material, with a brief overview in §A of the Online Appendix.  
 
 In addition to estimating average marginal component effects (AMCEs) for the features of interest [@hainmueller_2014_causal], we estimate two other quantities. We examine the interaction [@egami_2019_causal] between profile sexuality and reason for migration; we expect that sexual minorities fleeing persecution will be seen as more deserving than those looking for work, and this difference may be greater for sexual minorities than straight immigrants. We also test for the presence of heterogeneous effects for subsamples of respondents [@leeper_2020_measuring], including by political party affiliation, education, religion, sexual orientation, whether someone has LG friends or family, and whether someone is concerned about overpopulation. We expect that support for LG migrants will be highest among Democrats, the highly educated, sexual minorities, those concerned about overpopulation^[Anti-immigration activists often cite overpopulation as a major reason to limit immigration [@reimers_1999_unwelcome].], and people who have close LG contacts [@lewis_2011_friends; @dellaposta_2018_gay].  
 
@@ -466,9 +462,9 @@ lg_amce <- all_amces %>% filter(level == 'Lesbian or gay') %>% pull(estimate) %>
 ```
 
 
-Results for H1a and H1b are shown in Figure \@ref(fig:amces), which presents AMCEs for all features. (Full tables of all results are in the Online Appendix.) For LG profiles, we see a trivial AMCE effect size of `r lg_amce`, and it is nonsignificant. Neither H1a nor H1b is supported; overall, LG profiles are not more or less likely to be selection for admission to the U.S.
+Results for H1a and H1b are shown in Figure \@ref(fig:amces), which presents AMCEs for all features. (Full tables of all results are in the Online Appendix §G.) For LG profiles, we see a trivial AMCE effect size of `r lg_amce`, and it is nonsignificant. Neither H1a nor H1b is supported; overall, LG profiles are not more or less likely to be selection for admission to the U.S.
 
-H2 hypothesized mediation, i.e. that controlling for shared values would attenuate the effect of LG profiles on being chosen for admission. Although we expected that LG profiles would be seen as more culturally similar, Figure \@ref(fig:amces) shows that this is not the case: LG profiles were *less* likely to be designated as having shared values with the U.S.^[In the Online Appendix, we examine how cultural similarity determinations vary by respondent characteristics. All subgroups except the non-religious see LG profiles as less culturally similar.] Although the main effect for LG profiles was nonsignificant, Figure \@ref(fig:mediation) directly assesses the mediation hypothesis, presenting AMCEs for sexuality stratified by whether the profile was designated as being more culturally similar to the U.S. Interestingly, among profiles that were designated as not having shared values with the U.S., LG profiles were significantly less likely to be chosen for admission. Among profiles chosen as quite culturally similar, LG profiles have a positive point estimate for admission (though the AMCE is nonsignificant).
+H2 hypothesized mediation, i.e. that controlling for shared values would attenuate the effect of LG profiles on being chosen for admission. Although we expected that LG profiles would be seen as more culturally similar, Figure \@ref(fig:amces) shows that this is not the case: LG profiles were *less* likely to be designated as having shared values with the U.S.^[In the Online Appendix §E, we examine how cultural similarity determinations vary by respondent characteristics. All subgroups except the non-religious see LG profiles as less culturally similar.] Although the main effect for LG profiles was nonsignificant, Figure \@ref(fig:mediation) directly assesses the mediation hypothesis, presenting AMCEs for sexuality stratified by whether the profile was designated as being more culturally similar to the U.S. Interestingly, among profiles that were designated as not having shared values with the U.S., LG profiles were significantly less likely to be chosen for admission. Among profiles chosen as quite culturally similar, LG profiles have a positive point estimate for admission (though the AMCE is nonsignificant).
 
 <!-- Profiles who are seen as more culturally similar are far more likely to be chosen. However, LG profiles are seen as less culturally similar (Figure \@ref(fig:amces)). Even so, we assess mediation by stratifying the sample by whether profiles were in the top quartile for cultural similarity (receiving a score of 6 or 7 out of 7). For profiles that are seen as culturally similar, LG profiles are much more likely to be chosen than straight ones. For ones that are considered less culturally similar, LG profiles show no advantage. -->
 
@@ -596,7 +592,7 @@ cj(mutate(survey, educ = factor(educ,
 ```
 
 
-Figure \@ref(fig:interaction) presents interaction effects relevant to H3, which predicted that LG profiles with persecution as a reason for migration would be more likely to be chosen than those with economic reasons.^[In the Online Appendix, we present interactions with sexuality for all features.] The Figure supports this hypothesis: LG profiles that migrated to seek employment have a marginal mean of `r work_int`, while those fleeing persecution have a value of `r persecution_int`. This difference of `r LG_int_dif` is larger than the corresponding difference for straight profiles (`r straight_int_dif`), but not quite significantly so.  
+Figure \@ref(fig:interaction) presents interaction effects relevant to H3, which predicted that LG profiles with persecution as a reason for migration would be more likely to be chosen than those with economic reasons.^[In the Online Appendix §F, we present interactions with sexuality for all features.] The Figure supports this hypothesis: LG profiles that migrated to seek employment have a marginal mean of `r work_int`, while those fleeing persecution have a value of `r persecution_int`. This difference of `r LG_int_dif` is larger than the corresponding difference for straight profiles (`r straight_int_dif`), but not quite significantly so.  
 
 Figure \@ref(fig:mm) presents marginal means relevant for H4, revealing a number of significant heterogeneous effects. H4a predicted that respondents with at least a bachelor's degree would see LG migrants as more than other educational groups. While respondents with a high school degree or less are less likely to admit LG migrants than those with a college degree, this difference is small and nonsignificant, and both groups are less likely to admit LG migrants than straight ones. Respondents with some college, on the other hand, see LG immigrants as somewhat more deserving. Regarding political ideology, Democrats see LG immigrants as  more deserving than straight ones, while Republicans see LG ones as far less deserving, in line with H4b. Results for religion support H4c: Christians see LG immigrants as less deserving than atheists and the non-religious, who are significantly more likely to admit LG migrants than straight ones. As for sexuality, sexual minorities see LG immigrants as more deserving than straight ones, in line with H4d.  
 

@@ -31,10 +31,10 @@ bibliography: "/Users/nathan/My Drive/Projects/2020 Same-Sex Immigrant Couples/S
 csl: chicago-author-date.csl
 title: "Online Appendix"
 subtitle: "How Sexuality Affects Evaluations of Immigrant Deservingness and Cultural Similarity: A Conjoint Survey Experiment"
-date: "`r format(Sys.time(), '%B %e, %Y')`"
-author:
-- Nathan I. Hoffmann, Department of Sociology, University of California, Los Angeles
-- Kristopher Velasco, Department of Sociology, Princeton University
+# date: "`r format(Sys.time(), '%B %e, %Y')`"
+# author:
+# - Nathan I. Hoffmann, Department of Sociology, University of California, Los Angeles
+# - Kristopher Velasco, Department of Sociology, Princeton University
   
 
 ---
@@ -691,6 +691,8 @@ bind_rows(
 cj(survey, chosen ~  Sexuality + Gender + GDP + Skill + Language + Religion + Reason, 
         weights = ~weight, id = ~prolific_pid) %>%
   mutate(estimate = ifelse(estimate == 0.00000000, NA, estimate)) %>%
+  mutate_if(is.numeric, round, 3) %>%
+  mutate_if(is.numeric, format, nsmall=3) %>%
   select(Feature = feature, Level = level, Estimate = estimate, SE = std.error, `p-value` = p) %>%
   kableExtra::kable(booktabs = T, linesep = '', caption = 'Estimated  AMCEs for admission for all features. Standard errors are clustered within respondent.') %>%
 kableExtra::kable_styling(latex_options = "HOLD_position")
@@ -703,6 +705,8 @@ kableExtra::kable_styling(latex_options = "HOLD_position")
 cj(survey, value_chosen ~  Sexuality + Gender + GDP + Skill + Language + Religion + Reason, 
         weights = ~weight, id = ~prolific_pid) %>%
   mutate(estimate = ifelse(estimate == 0.00000000, NA, estimate)) %>%
+  mutate_if(is.numeric, round, 3) %>%
+  mutate_if(is.numeric, format, nsmall=3) %>%
   select(Feature = feature, Level = level, Estimate = estimate, SE = std.error, `p-value` = p) %>%
   kableExtra::kable(booktabs = T, linesep = '', caption = 'Estimated  AMCEs for cultural similarity for all features. Standard errors are clustered within respondent.') %>%
 kableExtra::kable_styling(latex_options = "HOLD_position")
@@ -717,6 +721,8 @@ survey %>%
   cj(., chosen ~ sexuality, weights = ~weight, id = ~prolific_pid, estimate = 'amce', 
              by = ~top_value) %>%
   mutate(estimate = ifelse(estimate == 0.00000000, NA, estimate)) %>%
+  mutate_if(is.numeric, round, 3) %>%
+  mutate_if(is.numeric, format, nsmall=3) %>%
   select(Subset = BY, Level = level, Estimate = estimate, SE = std.error, `p-value` = p) %>%
   kableExtra::kable(booktabs = T, linesep = '', caption = 'AMCEs for admission for sexuality, stratified by whether the profile received a 6 or 7 out of 7 on cultural similarity ratings.') %>%
 kableExtra::kable_styling(latex_options = "HOLD_position")
@@ -732,6 +738,8 @@ rbind(int_cj, int_cj_dif) %>%
                      'Feared government persecution - Could not find work' = 
                        'Persecution - Work')) %>%
   select(Subset = BY, Level = level, Estimate = estimate, SE = std.error, `p-value` = p) %>%
+  mutate_if(is.numeric, round, 3) %>%
+  mutate_if(is.numeric, format, nsmall=3) %>%
   kableExtra::kable(booktabs = T, linesep = '', caption = 'Marginal means of the interaction between sexuality and the reason for migration.') %>%
 kableExtra::kable_styling(latex_options = "HOLD_position")
 ```
@@ -777,6 +785,8 @@ cj(mutate(survey, educ = factor(educ,
   mutate(variable = factor(variable, levels = unique({.$variable})),
          values = factor(values, levels = rev(unique({.$values})))) %>%
   select(`Respondent Attribute` = BY, Level = level, Estimate = estimate, SE = std.error, `p-value` = p) %>%
+  mutate_if(is.numeric, round, 3) %>%
+  mutate_if(is.numeric, format, nsmall = 3) %>%
   kableExtra::kable(booktabs = T, linesep = '', caption = 'Marginal means for heterogeneous effects by respondent characteristics. Standard errors are clustered within respondent.') %>%
 kableExtra::kable_styling(latex_options = "HOLD_position")
   
