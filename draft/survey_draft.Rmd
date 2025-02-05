@@ -30,9 +30,9 @@ bibliography: "/Users/nathan/My Drive/Projects/2020 Same-Sex Immigrant Couples/S
 csl: chicago-author-date.csl
 title: "How Sexuality Affects Evaluations of Immigrant Deservingness and Cultural Similarity: A Conjoint Survey Experiment"
 # date: "`r format(Sys.time(), '%B %e, %Y')`"
-# author:
-# - Nathan I. Hoffmann, Department of Sociology, University of California, Los Angeles
-# - Kristopher Velasco, Department of Sociology, Princeton University
+author:
+- Nathan I. Hoffmann, Department of Sociology, University of California, Los Angeles
+- Kristopher Velasco, Department of Sociology, Princeton University
 
   
 
