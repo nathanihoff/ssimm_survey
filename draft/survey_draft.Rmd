@@ -10,14 +10,9 @@ output:
     keep_tex: no
 header-includes:
   - \usepackage{setspace}
-  # - \usepackage{fancyhdr}
-  # - \pagestyle{fancy}
-  # - \setlength{\headheight}{15pt}
-  # - \lhead{Hoffmann and Velasco}
-  # - \rhead{`r format(Sys.time(), '%B %e, %Y')`}
 editor_options: 
-  chunk_output_type: console
   
+  chunk_output_type: console
 citeproc: no
 # fontfamily: mathpazo
 # mainfont: "Times New Roman"
@@ -34,12 +29,8 @@ author:
 - Nathan I. Hoffmann, Department of Sociology, University of California, Los Angeles
 - Kristopher Velasco, Department of Sociology, Princeton University
 
-
-
 abstract: "In the wake of significant increases in lesbian and gay (LG) immigration, do Americans view LG migrants as more deserving of entry to the U.S. than their straight counterparts? Using a conjoint survey experiment with 1,650 respondents, we investigate how potential immigrants' sexual-minority status affects Americans' perceptions of their deservingness for admission and their cultural similarity to the U.S. Results show that, overall, Americans do not perceive LG immigrants as more deserving than straight ones, and LG immigrants are perceived as less culturally similar. But results also reveal heterogeneity: LG immigrants fleeing persecution are seen as more deserving of admission, and Democrats, atheists, and LG respondents consider LG migrants more deserving than straight ones. This paper helps disentangle Americans' preferences for migrants' presumed cultural similarity from economic potential and humanitarian merit as well as elucidate public opinion of an under-studied but politically salient group."
-
 # thanks: "We thank Natasha Quadlin, Marta Tienda, Sam Trejo, and participants at the 2024 Population Association of America Annual Meeting in Columbus, Ohio, for their helpful feedback on the survey and previous versions of this paper."
-
 ---
 
 \newcommand{\tabitem}{~~\llap{\textbullet}~~}
